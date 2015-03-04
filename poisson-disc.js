@@ -1,7 +1,9 @@
 // the setup
 var img = new Image();
 img.src = 'test.png';
-img.addEventListener('load', drawImg);
+img.addEventListener('load', function () {
+  img.loaded = true;
+});
 
 function drawImg() {
   var canvas1 = document.createElement('canvas');
@@ -26,11 +28,11 @@ function drawImg() {
     poly.color = colorForPoint(imgData.data, poly.c);
   }
 
-  drawAll();
+  requestAnimationFrame(drawAll);
 }
 
 function colorForPoint(imgData, p) {
-  var index = Math.round(p.x) * 4 + Math.round(p.y * canvas.width) * 4;
+  var index = Math.round(p.x) * 4 + Math.round(p.y) * canvas.width * 4;
   return {
     r: imgData[index],
     g: imgData[index + 1],
@@ -52,7 +54,7 @@ ctx.fillStyle = 'black';
 
 // the algorithm
 const PI2 = Math.PI * 2;
-const RADIUS = 100;
+const RADIUS = 10;
 const RADIUS2 = RADIUS * 2;
 const CANDIDATES = 10;
 const INTERVAL = 20;
@@ -408,8 +410,16 @@ function distance(p1, p2) {
 }
 
 poisson();
-ptri();
-requestAnimationFrame(drawAll);
+var worker = new Worker('ptri.js');
+worker.onmessage = function (event) {
+  polygons = event.data;
+  if (img.loaded) {
+    drawImg();
+  }
+};
+worker.postMessage([points, {width: canvas.width, height: canvas.height}]);
+//ptri();
+//requestAnimationFrame(drawAll);
 
 document.body.addEventListener('mousedown', function () {
   canvas.style.zIndex = '';
@@ -417,3 +427,4 @@ document.body.addEventListener('mousedown', function () {
 document.body.addEventListener('mouseup', function () {
   canvas.style.zIndex = 2;
 });
+
