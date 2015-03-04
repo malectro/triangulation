@@ -1,6 +1,6 @@
 // the setup
 var img = new Image();
-img.src = 'http://upload.wikimedia.org/wikipedia/commons/a/a5/Fez_(video_game)_screenshot_11.png';
+//img.src = 'http://upload.wikimedia.org/wikipedia/commons/a/a5/Fez_(video_game)_screenshot_11.png';
 
 var canvas = document.createElement('canvas');
 canvas.width = window.innerWidth;
@@ -17,7 +17,7 @@ const PI2 = Math.PI * 2;
 const RADIUS = 100;
 const RADIUS2 = RADIUS * 2;
 const CANDIDATES = 10;
-const INTERVAL = 1000;
+const INTERVAL = 20;
 
 var polygons = [];
 var points = [];
@@ -31,7 +31,7 @@ var point = {
 points.push(point);
 active.push(point);
 
-var start = new Date();
+var start = (new Date()) - 0;
 
 function animate() {
 
@@ -82,51 +82,6 @@ function animate() {
 
 
     if (acceptable) {
-      // find out if it's in a polygon
-      var index;
-      var container;
-      polygons.some(function (polygon, i) {
-        var det = contains2(polygon, acceptable);
-
-        if (det > 0) {
-          index = i;
-          container = polygon;
-          return true;
-        }
-      });
-
-      // split the polygon
-      if (container) {
-        polygons = polygons.concat([
-          [container[0], container[1], acceptable],
-          [container[1], container[2], acceptable],
-          [container[2], container[0], acceptable],
-        ]);
-        polygons.splice(index, 1);
-
-      // create a new polygon with 2 closest points
-      } else if (points.length > 1) {
-        var closest = [];
-
-        for (var point of points) {
-          var diffX = point.x - acceptable.x;
-          var diffY = point.y - acceptable.y;
-          point.diff = Math.sqrt(diffX * diffX + diffY * diffY);
-
-          if (closest.length < 1) {
-            closest[0] = point;
-          } else if (closest[0].diff > point.diff) {
-            closest[1] = closest[0];
-            closest[0] = point;
-          } else if (closest.length < 2 || closest[1].diff > point.diff) {
-            closest[1] = point;
-          }
-        }
-
-        // TODO probably need to make these counterclockwise
-        polygons.push([closest[0], closest[1], acceptable]);
-      }
-
       points.push(acceptable);
       active.push(acceptable);
     } else {
@@ -134,12 +89,127 @@ function animate() {
     }
 
     requestAnimationFrame(animate);
+    drawAll();
   } else {
+
     console.log('done');
-
+    triangulate();
+    drawAll();
   }
+}
 
-  drawAll();
+function triangulate() {
+
+  var outerPoints = [
+    {x: 0, y: 0},
+    {x: canvas.width, y: 0},
+    {x: canvas.width, y: canvas.height},
+    {x: 0, y: canvas.height},
+  ];
+
+  var edges = [
+    [outerPoints[0], outerPoints[1]],
+    [outerPoints[1], outerPoints[2]],
+    [outerPoints[2], outerPoints[3]],
+    [outerPoints[3], outerPoints[0]],
+    [outerPoints[0], outerPoints[2]],
+  ];
+
+  polygons = [
+    {
+      points: [
+        outerPoints[0],
+        outerPoints[2],
+        outerPoints[1],
+      ],
+      adjacents: [null, null, null],
+    },
+    {
+      points: [
+        outerPoints[0],
+        outerPoints[3],
+        outerPoints[2],
+      ],
+      adjacents: [null, null, null],
+    },
+  ];
+  polygons[0].adjacents[2] = polygons[1];
+  polygons[1].adjacents[1] = polygons[0];
+
+  for (var point of points) {
+    // find out if it's in a polygon
+    var index;
+    var container;
+    polygons.some(function (polygon, i) {
+      var det = contains2(polygon, point);
+
+      if (det > 0) {
+        index = i;
+        container = polygon;
+        return true;
+      }
+    });
+
+    // split the polygon
+    if (container) {
+      var cp = container.points;
+      var ca = container.adjacents;
+      var newPolygons = [
+        {
+          points: [
+            cp[0],
+            point,
+            cp[2],
+          ],
+          adjacents: [null, ca[1], null],
+        },
+        {
+          points: [
+            cp[0],
+            cp[1],
+            point,
+          ],
+          adjacents: [null, null, ca[2]],
+        },
+        {
+          points: [
+            point,
+            cp[1],
+            cp[2],
+          ],
+          adjacents: [ca[0], null, null],
+        },
+      ];
+      polygons = polygons.concat(newPolygons);
+      polygons.splice(index, 1);
+
+      for (var poly of newPolygons) {
+
+      }
+
+    // create a new polygon with 2 closest points
+    } else if (points.length > 1) {
+      var closest = [];
+
+      for (var otherPoint of points) {
+        var diffX = otherPoint.x - point.x;
+        var diffY = otherPoint.y - point.y;
+        otherPoint.diff = Math.sqrt(diffX * diffX + diffY * diffY);
+
+        if (closest.length < 1) {
+          closest[0] = otherPoint;
+        } else if (closest[0].diff > otherPoint.diff) {
+          closest[1] = closest[0];
+          closest[0] = otherPoint;
+        } else if (closest.length < 2 || closest[1].diff > otherPoint.diff) {
+          closest[1] = otherPoint;
+        }
+      }
+
+      // TODO probably need to make these counterclockwise
+      polygons.push([closest[0], closest[1], point]);
+    }
+  }
 }
 
 function drawAll() {
@@ -152,10 +222,12 @@ function drawAll() {
 
   ctx.strokeStyle = 'black';
   for (var polygon of polygons) {
-    ctx.moveTo(polygon[0].x, polygon[0].y);
-    ctx.lineTo(polygon[1].x, polygon[1].y);
-    ctx.lineTo(polygon[2].x, polygon[2].y);
-    ctx.lineTo(polygon[0].x, polygon[0].y);
+    pps = polygon.points;
+    ctx.beginPath();
+    ctx.moveTo(pps[0].x, pps[0].y);
+    ctx.lineTo(pps[1].x, pps[1].y);
+    ctx.lineTo(pps[2].x, pps[2].y);
+    ctx.lineTo(pps[0].x, pps[0].y);
     ctx.stroke();
   }
 }
@@ -165,7 +237,7 @@ function sign(p1, p2, p3) {
 }
 
 function contains2(polygon, point) {
-  var v1 = polygon[0], v2 = polygon[1], v3 = polygon[2];
+  var v1 = polygon.points[0], v2 = polygon.points[1], v3 = polygon.points[2];
   var b1, b2, b3;
 
   b1 = sign(point, v1, v2) < 0;
@@ -176,7 +248,7 @@ function contains2(polygon, point) {
 }
 
 function contains(polygon, point) {
-  var a = polygon[0], b = polygon[1], c = polygon[2];
+  var a = polygon.points[0], b = polygon.points[1], c = polygon.points[2];
   var p = point;
   if (!a || !b || !c || !p) {
     debugger;
@@ -191,6 +263,28 @@ function contains(polygon, point) {
       (b.y - p.x) * (c.x - p.y) * ((a.x * a.x - p.x * p.x) + (a.y * a.y - p.y * p.y))
     )
   );
+}
+
+function adjacents(polygon) {
+  var adjacents = new Set();
+  for (var point of polygon.points) {
+    for (var poly of point.polygons) {
+      if (isAdjacent(polygon, poly)) {
+        adjacents.add(poly);
+      }
+    }
+  }
+  return adjacents;
+}
+
+function isAdjacent(polygon1, polygon2) {
+  var num = 0;
+  for (var point of polygon1.points) {
+    if (polygon2.points.indexOf(point) > -1) {
+      num++;
+    }
+  }
+  return num > 1;
 }
 
 requestAnimationFrame(animate);
