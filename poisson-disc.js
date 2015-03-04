@@ -1,11 +1,49 @@
 // the setup
 var img = new Image();
-//img.src = 'http://upload.wikimedia.org/wikipedia/commons/a/a5/Fez_(video_game)_screenshot_11.png';
+img.src = 'test.png';
+img.addEventListener('load', drawImg);
+
+function drawImg() {
+  var canvas1 = document.createElement('canvas');
+  //canvas1.style.visibility = 'hidden';
+  canvas1.width = window.innerWidth;
+  canvas1.height = window.innerHeight;
+  document.body.appendChild(canvas1);
+
+  var ctx1 = canvas1.getContext('2d');
+  ctx1.drawImage(img, 0, 0, canvas1.width, canvas1.height);
+
+  var imgData = ctx1.getImageData(0, 0, canvas1.width, canvas1.height);
+  console.log(imgData.data[1000], 'hi');
+
+  var ps;
+  for (var poly of polygons) {
+    ps = poly.points;
+    poly.c = {
+      x: (ps[0].x + ps[1].x + ps[2].x) / 3,
+      y: (ps[0].y + ps[1].y + ps[2].y) / 3,
+    };
+    poly.color = colorForPoint(imgData.data, poly.c);
+  }
+
+  drawAll();
+}
+
+function colorForPoint(imgData, p) {
+  var index = Math.round(p.x) * 4 + Math.round(p.y * canvas.width) * 4;
+  return {
+    r: imgData[index],
+    g: imgData[index + 1],
+    b: imgData[index + 2],
+    toString: colorToString,
+  };
+}
 
 var canvas = document.createElement('canvas');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 canvas.style.background = '#eee';
+canvas.style.zIndex = 2;
 document.body.appendChild(canvas);
 
 var ctx = canvas.getContext('2d');
@@ -101,7 +139,13 @@ function ptri() {
 
   polygons = [];
   for (var tri of triangles) {
-    polygons.push({points: tri.getPoints()});
+    polygons.push({points: tri.getPoints(), color: randomColor()});
+  }
+}
+
+function getColor() {
+  for (var poly of polygons) {
+
   }
 }
 
@@ -241,6 +285,8 @@ function triangulate() {
 }
 
 function randomColor(variation, base) {
+  variation = variation || 10;
+  base = base || {r: 120, g: 120, b: 120};
   var half = variation / 2;
   var color = {
     r: Math.round(Math.random() * variation - half + base.r),
@@ -258,16 +304,9 @@ function colorToString() {
 function drawAll() {
   ctx.clearRect(0, 0, 1000000, 1000000);
 
-  /*
-  ctx.fillStyle = 'black';
-  for (var point of points) {
-    ctx.fillRect(point.x, point.y, 10, 10);
-  }
-  */
-
   ctx.strokeStyle = 'black';
   for (var polygon of polygons) {
-    ctx.fillStyle = randomColor(10, {r: 180, g: 180, b: 180});
+    ctx.fillStyle = polygon.color;
     pps = polygon.points;
     ctx.beginPath();
     ctx.moveTo(pps[0].x, pps[0].y);
@@ -372,3 +411,9 @@ poisson();
 ptri();
 requestAnimationFrame(drawAll);
 
+document.body.addEventListener('mousedown', function () {
+  canvas.style.zIndex = '';
+});
+document.body.addEventListener('mouseup', function () {
+  canvas.style.zIndex = 2;
+});
