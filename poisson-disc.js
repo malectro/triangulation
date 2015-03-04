@@ -136,10 +136,11 @@ function triangulate() {
   polygons[0].adjacents[2] = polygons[1];
   polygons[1].adjacents[1] = polygons[0];
 
+
+  var index, container, cp, ca, newPolygons, idx;
+
   for (var point of points) {
     // find out if it's in a polygon
-    var index;
-    var container;
     polygons.some(function (polygon, i) {
       var det = contains2(polygon, point);
 
@@ -152,9 +153,9 @@ function triangulate() {
 
     // split the polygon
     if (container) {
-      var cp = container.points;
-      var ca = container.adjacents;
-      var newPolygons = [
+      cp = container.points;
+      ca = container.adjacents;
+      newPolygons = [
         {
           points: [
             cp[0],
@@ -181,26 +182,28 @@ function triangulate() {
         },
       ];
 
-      var indx;
-      if (ca[1]) {
-        idx = ca[1].adjacents.indexOf(container);
-        ca[1].adjacents[idx] = newPolygons[0];
-      }
-      if (ca[2]) {
-        idx = ca[2].adjacents.indexOf(container);
-        ca[2].adjacents[idx] = newPolygons[1];
-      }
-      if (ca[0]) {
-        idx = ca[0].adjacents.indexOf(container);
-        ca[0].adjacents[idx] = newPolygons[2];
-      }
-
       newPolygons[0].adjacents[0] = newPolygons[2];
       newPolygons[0].adjacents[2] = newPolygons[1];
       newPolygons[1].adjacents[0] = newPolygons[2];
       newPolygons[1].adjacents[1] = newPolygons[0];
       newPolygons[2].adjacents[1] = newPolygons[0];
       newPolygons[2].adjacents[2] = newPolygons[1];
+
+      if (ca[1]) {
+        idx = ca[1].adjacents.indexOf(container);
+        ca[1].adjacents[idx] = newPolygons[0];
+        maybeFlip(ca[1], newPolygons[0]);
+      }
+      if (ca[2]) {
+        idx = ca[2].adjacents.indexOf(container);
+        ca[2].adjacents[idx] = newPolygons[1];
+        maybeFlip(ca[2], newPolygons[1]);
+      }
+      if (ca[0]) {
+        idx = ca[0].adjacents.indexOf(container);
+        ca[0].adjac.adjacentsents[idx] = newPolygons[2];
+        maybeFlip(ca[0], newPolygons[2]);
+      }
 
       polygons = polygons.concat(newPolygons);
       polygons.splice(index, 1);
@@ -303,6 +306,41 @@ function isAdjacent(polygon1, polygon2) {
     }
   }
   return num > 1;
+}
+
+// i should be doing this by angles, but i'm lazy
+function maybeFlip(polygon1, polygon2) {
+  var opposeIdx1 = polygon1.adjacents.indexOf(polygon2);
+  var opposeIdx2 = polygon2.adjacents.indexOf(polygon1);
+  var op1 = polygon1.points[opposeIdx1];
+  var op2 = polygon2.points[opposeIdx2];
+  var e1 = polygon1.points[(opposeIdx1 + 1) % 3];
+  var e2 = polygon1.points[(opposeIdx1 + 2) % 3];
+
+  var flip = distance(e1, e2) > distance(op1, op2);
+
+  if (flip) {
+    var tradeIdx = (opposeIdx1 + 1) % 3;
+    polygon1.points[tradeIdx] = op2;
+    polygon1.adjacents[opposeIdx1] = polygon2.adjacents[(opposeIdx2 + 2) % 3];
+    polygon1.adjacents[(opposeIdx1 + 2) % 3] = polygon2;
+
+    var tradeIdx = (opposeIdx2 + 1) % 3;
+    polygon2.points[tradeIdx] = op1;
+    polygon2.adjacents[opposeIdx2] = polygon1.adjacents[(opposeIdx1 + 2) % 3];
+    polygon2.adjacents[(opposeIdx2 + 2) % 3] = polygon1;
+  }
+
+  return flip;
+}
+
+function distance(p1, p2) {
+  if (!p1 || !p2) {
+    debugger;
+  }
+  var dx = p1.x - p2.x;
+  var dy = p1.y - p2.y;
+  return Math.sqrt(dx * dx + dy * dy);
 }
 
 requestAnimationFrame(animate);
