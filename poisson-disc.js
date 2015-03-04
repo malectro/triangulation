@@ -180,12 +180,30 @@ function triangulate() {
           adjacents: [ca[0], null, null],
         },
       ];
+
+      var indx;
+      if (ca[1]) {
+        idx = ca[1].adjacents.indexOf(container);
+        ca[1].adjacents[idx] = newPolygons[0];
+      }
+      if (ca[2]) {
+        idx = ca[2].adjacents.indexOf(container);
+        ca[2].adjacents[idx] = newPolygons[1];
+      }
+      if (ca[0]) {
+        idx = ca[0].adjacents.indexOf(container);
+        ca[0].adjacents[idx] = newPolygons[2];
+      }
+
+      newPolygons[0].adjacents[0] = newPolygons[2];
+      newPolygons[0].adjacents[2] = newPolygons[1];
+      newPolygons[1].adjacents[0] = newPolygons[2];
+      newPolygons[1].adjacents[1] = newPolygons[0];
+      newPolygons[2].adjacents[1] = newPolygons[0];
+      newPolygons[2].adjacents[2] = newPolygons[1];
+
       polygons = polygons.concat(newPolygons);
       polygons.splice(index, 1);
-
-      for (var poly of newPolygons) {
-
-      }
 
     // create a new polygon with 2 closest points
     } else if (points.length > 1) {
