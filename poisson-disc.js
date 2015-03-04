@@ -33,14 +33,9 @@ active.push(point);
 
 var start = (new Date()) - 0;
 
-function animate() {
+function poisson() {
 
-  if ((new Date()) - start < INTERVAL) {
-    requestAnimationFrame(animate);
-
-  } else if (active.length) {
-    start = start + INTERVAL;
-
+  while (active.length) {
     // get a random active sample
     var randomIndex = Math.floor(Math.random() * active.length);
     var current = active[randomIndex];
@@ -88,13 +83,25 @@ function animate() {
       active.splice(randomIndex, 1);
     }
 
-    requestAnimationFrame(animate);
-    drawAll();
-  } else {
+  }
+}
 
-    console.log('done');
-    triangulate();
-    drawAll();
+function ptri() {
+  var contour = [
+      new poly2tri.Point(0, 0),
+      new poly2tri.Point(canvas.width, 0),
+      new poly2tri.Point(canvas.width, canvas.height),
+      new poly2tri.Point(0, canvas.height)
+  ];
+  var swctx = new poly2tri.SweepContext(contour);
+  swctx.addPoints(points.map(function (point) {
+    return new poly2tri.Point(point.x, point.y);
+  }));
+  var triangles = swctx.triangulate().getTriangles();
+
+  polygons = [];
+  for (var tri of triangles) {
+    polygons.push({points: tri.getPoints()});
   }
 }
 
@@ -233,23 +240,41 @@ function triangulate() {
   }
 }
 
+function randomColor(variation, base) {
+  var half = variation / 2;
+  var color = {
+    r: Math.round(Math.random() * variation - half + base.r),
+    g: Math.round(Math.random() * variation - half + base.g),
+    b: Math.round(Math.random() * variation - half + base.b),
+    toString: colorToString,
+  };
+  return color;
+}
+
+function colorToString() {
+  return 'rgb(' + this.r + ',' + this.g + ',' + this.b + ')';
+}
+
 function drawAll() {
   ctx.clearRect(0, 0, 1000000, 1000000);
 
+  /*
   ctx.fillStyle = 'black';
   for (var point of points) {
     ctx.fillRect(point.x, point.y, 10, 10);
   }
+  */
 
   ctx.strokeStyle = 'black';
   for (var polygon of polygons) {
+    ctx.fillStyle = randomColor(10, {r: 180, g: 180, b: 180});
     pps = polygon.points;
     ctx.beginPath();
     ctx.moveTo(pps[0].x, pps[0].y);
     ctx.lineTo(pps[1].x, pps[1].y);
     ctx.lineTo(pps[2].x, pps[2].y);
     ctx.lineTo(pps[0].x, pps[0].y);
-    ctx.stroke();
+    ctx.fill();
   }
 }
 
@@ -343,11 +368,7 @@ function distance(p1, p2) {
   return Math.sqrt(dx * dx + dy * dy);
 }
 
-requestAnimationFrame(animate);
-
-/*
-for (var point of points) {
-  ctx.fillRect(point.x, point.y, 4, 4);
-}
-*/
+poisson();
+ptri();
+requestAnimationFrame(drawAll);
 
