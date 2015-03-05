@@ -3,17 +3,16 @@ var img = new Image();
 img.src = 'test.png';
 img.addEventListener('load', function () {
   img.loaded = true;
-  drawImg();
+  drawImg(img);
 });
+var canvas1 = document.createElement('canvas');
+canvas1.width = window.innerWidth;
+canvas1.height = window.innerHeight;
+document.body.appendChild(canvas1);
+var ctx1 = canvas1.getContext('2d');
 
-function drawImg() {
-  var canvas1 = document.createElement('canvas');
-  //canvas1.style.visibility = 'hidden';
-  canvas1.width = window.innerWidth;
-  canvas1.height = window.innerHeight;
-  document.body.appendChild(canvas1);
-
-  var ctx1 = canvas1.getContext('2d');
+function drawImg(img) {
+  ctx1.clearRect(0, 0, 10000000, 1000000);
   ctx1.drawImage(img, 0, 0, canvas1.width, canvas1.height);
 
   var imgData = ctx1.getImageData(0, 0, canvas1.width, canvas1.height);
@@ -54,7 +53,7 @@ ctx.fillStyle = 'black';
 
 // the algorithm
 const PI2 = Math.PI * 2;
-const RADIUS = 10;
+const RADIUS = 20;
 const RADIUS2 = RADIUS * 2;
 const CANDIDATES = 10;
 const INTERVAL = 20;
@@ -586,7 +585,7 @@ var worker = new Worker('ptri.js');
 worker.onmessage = function (event) {
   polygons = event.data;
   if (img.loaded) {
-    drawImg();
+    drawImg(img);
   }
   console.log('polytri took ms', (new Date()) - begin);
 };
@@ -594,13 +593,26 @@ worker.postMessage([points, {width: canvas.width, height: canvas.height}]);
 //ptri();
 //requestAnimationFrame(drawAll);
 
-document.body.addEventListener('mousedown', function () {
+canvas.addEventListener('mousedown', function () {
   canvas.style.zIndex = '';
 });
-document.body.addEventListener('mouseup', function () {
+canvas.addEventListener('mouseup', function () {
   canvas.style.zIndex = 2;
 });
 
+var input = document.getElementById('file');
+var result;
+input.addEventListener('change', function () {
+  var img = new Image();
+
+  img.addEventListener('load', function () {
+    drawImg(img);
+  });
+
+  img.src = URL.createObjectURL(input.files[0]);
+});
+
+/*
 document.body.addEventListener('click', function (event) {
   var click = {x: event.offsetX, y: event.offsetY};
 
@@ -623,4 +635,4 @@ document.body.addEventListener('click', function (event) {
   quadtreeClosest(quadtree, click);
   console.log('quadtree found point in ms', new Date() - start);
 });
-
+*/
