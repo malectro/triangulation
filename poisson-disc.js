@@ -3,6 +3,7 @@ var img = new Image();
 img.src = 'test.png';
 img.addEventListener('load', function () {
   img.loaded = true;
+  drawImg();
 });
 
 function drawImg() {
@@ -54,7 +55,7 @@ ctx.fillStyle = 'black';
 
 // the algorithm
 const PI2 = Math.PI * 2;
-const RADIUS = 10;
+const RADIUS = 60;
 const RADIUS2 = RADIUS * 2;
 const CANDIDATES = 10;
 const INTERVAL = 20;
@@ -62,6 +63,7 @@ const INTERVAL = 20;
 var polygons = [];
 var points = [];
 var active = [];
+var quadtree = quadtreeNew(0, 0, canvas.width, canvas.height);
 
 // create one random point
 var point = {
@@ -82,7 +84,7 @@ function poisson() {
     var acceptable = null;
 
     // generate candidates
-    for (var i of new Array(CANDIDATES)) {
+    for (var i = 0; i < CANDIDATES; i++) {
       var distance = Math.random() * RADIUS + RADIUS;
       var angle = Math.random() * PI2;
       var candidate = {
@@ -119,11 +121,83 @@ function poisson() {
     if (acceptable) {
       points.push(acceptable);
       active.push(acceptable);
+      quadtreeAdd(quadtree, acceptable);
     } else {
       active.splice(randomIndex, 1);
     }
 
   }
+}
+
+const QT_NW = 0;
+const QT_NE = 1;
+const QT_SE = 2;
+const QT_SW = 3;
+
+function quadtreeNew(x, y, width, height) {
+  return {
+    x: x,
+    y: y,
+    width: width,
+    height: height,
+    halfW: width / 2,
+    halfH: height / 2,
+    regions: [],
+    count: 0,
+    point: null,
+  };
+}
+
+function quadtreeAdd(qt, point) {
+  if (!qt.point) {
+    qt.point = point;
+
+  } else {
+    var region = quadtreeRegion(qt, point);
+
+    if (!qt.regions[region]) {
+      qt.regions[region] = quadtreeNew((region % 2) * qt.halfW, Math.floor(region / 2) * qt.halfH, qt.halfW, qt.halfH);
+      qt.count++;
+    }
+
+    quadtreeAdd(qt.regions[region], point);
+
+    if (qt.count > 3 && qt.point) {
+      quadtreeAdd(qt.regions[quadtreeRegion(qt, qt.point)], qt.point);
+      qt.point = null;
+    }
+  }
+}
+
+function quadtreeRegion(qt, point) {
+  var region;
+  var x = point.x - qt.x;
+  var y = point.y - qt.y;
+  if (x < qt.halfW) {
+    if (y < qt.halfH) {
+      region = QT_NW;
+    } else {
+      region = QT_SW;
+    }
+  } else {
+    if (y < qt.halfH) {
+      region = QT_NE;
+    } else {
+      region = QT_SE;
+    }
+  }
+  return region;
+}
+
+function quadtreeClosest(qt, point) {
+  var point;
+  var child = qt.regions[quadtreeRegion(qt, point)];
+  if (!child) {
+    point = qt.point;
+  } else {
+    point = quadtreeClosest(child, point);
+  }
+  return point;
 }
 
 function ptri() {
@@ -418,8 +492,8 @@ worker.onmessage = function (event) {
   }
 };
 worker.postMessage([points, {width: canvas.width, height: canvas.height}]);
-//ptri();
-//requestAnimationFrame(drawAll);
+ptri();
+requestAnimationFrame(drawAll);
 
 document.body.addEventListener('mousedown', function () {
   canvas.style.zIndex = '';
