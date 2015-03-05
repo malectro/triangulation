@@ -17,7 +17,6 @@ function drawImg() {
   ctx1.drawImage(img, 0, 0, canvas1.width, canvas1.height);
 
   var imgData = ctx1.getImageData(0, 0, canvas1.width, canvas1.height);
-  console.log(imgData.data[1000], 'hi');
 
   var ps;
   for (var poly of polygons) {
@@ -55,7 +54,7 @@ ctx.fillStyle = 'black';
 
 // the algorithm
 const PI2 = Math.PI * 2;
-const RADIUS = 60;
+const RADIUS = 10;
 const RADIUS2 = RADIUS * 2;
 const CANDIDATES = 10;
 const INTERVAL = 20;
@@ -513,17 +512,22 @@ function distance(p1, p2) {
   return Math.sqrt(dx * dx + dy * dy);
 }
 
+var begin = (new Date()) - 0;
 poisson();
+console.log('poisson took ms', (new Date()) - begin);
+begin = new Date() - 0;
+
 var worker = new Worker('ptri.js');
 worker.onmessage = function (event) {
   polygons = event.data;
   if (img.loaded) {
     drawImg();
   }
+  console.log('polytri took ms', (new Date()) - begin);
 };
 worker.postMessage([points, {width: canvas.width, height: canvas.height}]);
-ptri();
-requestAnimationFrame(drawAll);
+//ptri();
+//requestAnimationFrame(drawAll);
 
 document.body.addEventListener('mousedown', function () {
   canvas.style.zIndex = '';
