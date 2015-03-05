@@ -1,0 +1,26 @@
+{
+  "name": "js-graphics",
+  "main": "index.js",
+  "version": "0.0.1",
+  "homepage": "https://github.com/malectro/triangulation",
+  "authors": [
+    "Kyle Warren <qarren@gmail.com>"
+  ],
+  "description": "kyles graphics stuff",
+  "moduleType": [
+    "globals"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "underscore": "~1.8.2",
+    "poly2tri": "~1.3.5"
+  }
+}
