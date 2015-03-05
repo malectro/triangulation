@@ -24,5 +24,6 @@ function ptri(points, canvas) {
 self.onmessage = function (event) {
   var polygons = ptri(event.data[0], event.data[1]);
   self.postMessage(polygons);
+  self.close();
 };
 

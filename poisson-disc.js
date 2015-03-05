@@ -1,13 +1,14 @@
 // the setup
-var img = new Image();
-img.src = 'test.png';
-img.addEventListener('load', function () {
-  img.loaded = true;
-  drawImg(img);
+var currentImage = new Image();
+currentImage.src = 'test.png';
+currentImage.addEventListener('load', function () {
+  currentImage.loaded = true;
+  drawImg(currentImage);
 });
 var canvas1 = document.createElement('canvas');
 canvas1.width = window.innerWidth;
 canvas1.height = window.innerHeight;
+canvas1.style.zIndex = 2;
 document.body.appendChild(canvas1);
 var ctx1 = canvas1.getContext('2d');
 
@@ -27,6 +28,8 @@ function drawImg(img) {
     poly.color = colorForPoint(imgData.data, poly.c);
   }
 
+  currentImage = img;
+
   requestAnimationFrame(drawAll);
 }
 
@@ -44,7 +47,7 @@ var canvas = document.createElement('canvas');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 canvas.style.background = '#eee';
-canvas.style.zIndex = 2;
+canvas.style.zIndex = 3;
 document.body.appendChild(canvas);
 
 var ctx = canvas.getContext('2d');
@@ -53,9 +56,9 @@ ctx.fillStyle = 'black';
 
 // the algorithm
 const PI2 = Math.PI * 2;
-const RADIUS = 20;
-const RADIUS2 = RADIUS * 2;
-const CANDIDATES = 10;
+var RADIUS = 20;
+var RADIUS2 = RADIUS * 2;
+var CANDIDATES = 10;
 const INTERVAL = 20;
 
 var polygons = [];
@@ -576,28 +579,46 @@ function distance(p1, p2) {
   return Math.sqrt(dx * dx + dy * dy);
 }
 
-var begin = (new Date()) - 0;
-poisson();
-console.log('poisson took ms', (new Date()) - begin);
-begin = new Date() - 0;
+function run() {
+  polygons = [];
+  points = [];
+  active = [];
+  quadtree = quadtreeNew(0, 0, canvas.width, canvas.height);
 
-var worker = new Worker('ptri.js');
-worker.onmessage = function (event) {
-  polygons = event.data;
-  if (img.loaded) {
-    drawImg(img);
-  }
-  console.log('polytri took ms', (new Date()) - begin);
-};
-worker.postMessage([points, {width: canvas.width, height: canvas.height}]);
-//ptri();
-//requestAnimationFrame(drawAll);
+  // create one random point
+  var point = {
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+  };
+  points.push(point);
+  active.push(point);
+  quadtreeAdd(quadtree, point);
 
+  var begin = (new Date()) - 0;
+  poisson();
+  console.log('poisson took ms', (new Date()) - begin);
+  begin = new Date() - 0;
+
+  var worker = new Worker('ptri.js');
+  worker.onmessage = function (event) {
+    polygons = event.data;
+    if (currentImage.loaded) {
+      drawImg(currentImage);
+    }
+    console.log('polytri took ms', (new Date()) - begin);
+  };
+  worker.postMessage([points, {width: canvas.width, height: canvas.height}]);
+  //ptri();
+  //requestAnimationFrame(drawAll);
+}
+
+var opacity;
 canvas.addEventListener('mousedown', function () {
-  canvas.style.zIndex = '';
+  opacity = canvas.style.opacity;
+  canvas.style.opacity = 0;
 });
 canvas.addEventListener('mouseup', function () {
-  canvas.style.zIndex = 2;
+  canvas.style.opacity = opacity;
 });
 
 var input = document.getElementById('file');
@@ -606,11 +627,32 @@ input.addEventListener('change', function () {
   var img = new Image();
 
   img.addEventListener('load', function () {
+    img.loaded = true;
     drawImg(img);
   });
 
   img.src = URL.createObjectURL(input.files[0]);
 });
+
+var radiusInput = document.getElementById('radius');
+radiusInput.addEventListener('change', function () {
+  RADIUS = parseInt(radiusInput.value, 10);
+});
+
+var candidatesInput = document.getElementById('candidates');
+candidatesInput.addEventListener('change', function () {
+  CANDIDATES = parseInt(candidatesInput.value, 10);
+});
+
+var opacityInput = document.getElementById('opacity');
+opacityInput.addEventListener('change', function () {
+  canvas.style.opacity = parseFloat(opacityInput.value, 10);
+});
+canvas.style.opacity = parseFloat(opacityInput.value, 10);
+
+document.getElementById('run').addEventListener('click', run);
+
+run();
 
 /*
 document.body.addEventListener('click', function (event) {
