@@ -98,8 +98,22 @@ function poisson() {
           || candidate.x < 0 || candidate.y < 0) {
           good = false;
       } else {
+        /*
+        for (var p of points) {
+          var dist = distance(p, candidate);
+          if (dist < RADIUS) {
+            good = false;
+            break;
+          }
+        }
+        */
+
+        /*
         var closest = quadtreeClosest(quadtree, candidate);
         good = distance(closest, candidate) > RADIUS;
+        */
+
+        good = quadtreeFits(quadtree, candidate);
       }
 
       if (good) {
@@ -201,6 +215,57 @@ function quadtreeRegion(qt, point) {
 
 function quadtreeClosest(qt, point) {
   return quadtreeClosestRecurse(qt, point, {d: qt.width + qt.width, p: null}).p;
+}
+
+function quadtreeClosestRecurse(qt, point, best) {
+  if (point.x < qt.x - best.d || point.y < qt.y - best.d
+      || point.x > qt.x + qt.width + best.d || point.y > qt.y + qt.height + best.d) {
+      return best;
+  }
+
+  if (qt.point) {
+    var dist = distance(point, qt.point);
+
+    if (dist < best.d) {
+      best = {
+        d: dist,
+        p: qt.point,
+      };
+    }
+  }
+
+  for (var child of qt.regions) {
+    if (child) {
+      best = quadtreeClosestRecurse(child, point, best);
+    }
+  }
+
+  return best;
+}
+
+function quadtreeFits(qt, point) {
+  if (point.x < qt.x - RADIUS || point.y < qt.y - RADIUS
+      || point.x > qt.x + qt.width + RADIUS || point.y > qt.y + qt.height + RADIUS) {
+      return true;
+  }
+
+  if (qt.point) {
+    var dist = distance(point, qt.point);
+
+    if (dist < RADIUS) {
+      return false;
+    }
+  }
+
+  for (var child of qt.regions) {
+    if (child) {
+      if (!quadtreeFits(child, point)) {
+        return false;
+      }
+    }
+  }
+
+  return true;
 }
 
 function quadtreeClosestRecurse(qt, point, best) {
@@ -534,5 +599,28 @@ document.body.addEventListener('mousedown', function () {
 });
 document.body.addEventListener('mouseup', function () {
   canvas.style.zIndex = 2;
+});
+
+document.body.addEventListener('click', function (event) {
+  var click = {x: event.offsetX, y: event.offsetY};
+
+  var start = new Date() - 0;
+
+  var bp = null;
+  var bd = Infinity;
+  var dist;
+  for (var p of points) {
+    dist = distance(p, click);
+    if (dist < bd) {
+      dist = bd;
+      bp = p;
+    }
+  }
+
+  console.log('brute force found point in ms', new Date() - start);
+  start = new Date() - 0;
+
+  quadtreeClosest(quadtree, click);
+  console.log('quadtree found point in ms', new Date() - start);
 });
 
