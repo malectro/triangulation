@@ -72,6 +72,7 @@ var point = {
 };
 points.push(point);
 active.push(point);
+quadtreeAdd(quadtree, point);
 
 var start = (new Date()) - 0;
 
@@ -85,11 +86,11 @@ function poisson() {
 
     // generate candidates
     for (var i = 0; i < CANDIDATES; i++) {
-      var distance = Math.random() * RADIUS + RADIUS;
+      var far = Math.random() * RADIUS + RADIUS;
       var angle = Math.random() * PI2;
       var candidate = {
-        x: current.x + Math.cos(angle) * distance,
-        y: current.y - Math.sin(angle) * distance,
+        x: current.x + Math.cos(angle) * far,
+        y: current.y - Math.sin(angle) * far,
       };
       var good = true;
 
@@ -98,17 +99,8 @@ function poisson() {
           || candidate.x < 0 || candidate.y < 0) {
           good = false;
       } else {
-        // TODO find a way to avoid brute forcing this
-        for (var point of points) {
-          var diffX = point.x - candidate.x;
-          var diffY = point.y - candidate.y;
-          var diff = Math.sqrt(diffX * diffX + diffY * diffY);
-
-          if (diff < RADIUS) {
-            good = false;
-            break;
-          }
-        }
+        var closest = quadtreeClosest(quadtree, candidate);
+        good = distance(closest, candidate) > RADIUS;
       }
 
       if (good) {
@@ -131,8 +123,8 @@ function poisson() {
 
 const QT_NW = 0;
 const QT_NE = 1;
-const QT_SE = 2;
-const QT_SW = 3;
+const QT_SW = 2;
+const QT_SE = 3;
 
 function quadtreeNew(x, y, width, height) {
   return {
@@ -143,12 +135,35 @@ function quadtreeNew(x, y, width, height) {
     halfW: width / 2,
     halfH: height / 2,
     regions: [],
-    count: 0,
     point: null,
+    depth: 0,
+    count: 0,
   };
 }
 
+function quadtreeAddLoop(qt, point) {
+  var region;
+
+  while (qt) {
+    if (!qt.point) {
+      qt.point = point;
+      qt = null;
+
+    } else {
+      region = quadtreeRegion(qt, point);
+
+      if (!qt.regions[region]) {
+        qt.regions[region] = quadtreeNew((region % 2) * qt.halfW + qt.x, Math.floor(region / 2) * qt.halfH + qt.y, qt.halfW, qt.halfH);
+      }
+
+      qt = qt.regions[region];
+    }
+  }
+}
+
 function quadtreeAdd(qt, point) {
+  qt.count++;
+
   if (!qt.point) {
     qt.point = point;
 
@@ -156,17 +171,13 @@ function quadtreeAdd(qt, point) {
     var region = quadtreeRegion(qt, point);
 
     if (!qt.regions[region]) {
-      qt.regions[region] = quadtreeNew((region % 2) * qt.halfW, Math.floor(region / 2) * qt.halfH, qt.halfW, qt.halfH);
-      qt.count++;
+      qt.regions[region] = quadtreeNew((region % 2) * qt.halfW + qt.x, Math.floor(region / 2) * qt.halfH + qt.y, qt.halfW, qt.halfH);
     }
 
-    quadtreeAdd(qt.regions[region], point);
-
-    if (qt.count > 3 && qt.point) {
-      quadtreeAdd(qt.regions[quadtreeRegion(qt, qt.point)], qt.point);
-      qt.point = null;
-    }
+    qt.depth = quadtreeAdd(qt.regions[region], point) + 1;
   }
+
+  return qt.depth;
 }
 
 function quadtreeRegion(qt, point) {
@@ -190,14 +201,33 @@ function quadtreeRegion(qt, point) {
 }
 
 function quadtreeClosest(qt, point) {
-  var point;
-  var child = qt.regions[quadtreeRegion(qt, point)];
-  if (!child) {
-    point = qt.point;
-  } else {
-    point = quadtreeClosest(child, point);
+  return quadtreeClosestRecurse(qt, point, {d: qt.width + qt.width, p: null}).p;
+}
+
+function quadtreeClosestRecurse(qt, point, best) {
+  if (point.x < qt.x - best.d || point.y < qt.y - best.d
+      || point.x > qt.x + qt.width + best.d || point.y > qt.y + qt.height + best.d) {
+      return best;
   }
-  return point;
+
+  if (qt.point) {
+    var dist = distance(point, qt.point);
+
+    if (dist < best.d) {
+      best = {
+        d: dist,
+        p: qt.point,
+      };
+    }
+  }
+
+  for (var child of qt.regions) {
+    if (child) {
+      best = quadtreeClosestRecurse(child, point, best);
+    }
+  }
+
+  return best;
 }
 
 function ptri() {
