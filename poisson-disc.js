@@ -652,6 +652,14 @@ canvas.style.opacity = parseFloat(opacityInput.value, 10);
 
 document.getElementById('run').addEventListener('click', run);
 
+var controls = document.getElementById('controls');
+document.getElementById('hide').addEventListener('click', function () {
+  controls.className = 'hide';
+});
+document.getElementById('show').addEventListener('click', function () {
+  controls.className = '';
+});
+
 run();
 
 /*

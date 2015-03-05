@@ -10,21 +10,65 @@
       }
       #controls {
         position: absolute; top: 0; right: 0; z-index: 4;
+        padding: 10px;
+        background: rgba(0, 0, 0, 0.2);
+        color: white;
+        font-family: sans-serif;
+        font-weight: 300;
+        font-size: 14px;
       }
+        #controls div {
+          margin-top: 10px;
+        }
+        #controls input {
+          background: transparent;
+          border: 0;
+          border-bottom: 1px solid white;
+          color: white;
+          text-align: right;
+          width: 100px;
+          font-size: 14px;
+          font-weight: 300;
+          outline: none;
+          text-rendering: geometricPrecision;
+        }
+        #controls button {
+          float: right;
+        }
+        #controls a {
+          display: none;
+        }
+        #controls #content {
+          margin: 0;
+        }
+
+        #controls.hide #content {
+          display: none;
+        }
+        #controls.hide #show {
+          display: inline;
+          cursor: pointer;
+        }
     </style>
     <script src="http://r3mi.github.io/poly2tri.js/dist/poly2tri.js"></script>
     <script src="poisson-disc.js" async></script>
   </head>
   <body>
-    <div id="controls">
-      <input type="file" id="file">
-      <div>Proximity</div>
-      <input type="number" id="radius" value="30">
-      <div>Precision</div>
-      <input type="number" id="candidates" value="10">
-      <div>Opacity</div>
-      <input type="range" id="opacity" value="0.5" max="1" min="0" step="0.01">
-      <div><button id="run">run</button></div>
+    <div id="controls" class="hide">
+      <div id="content">
+        <input type="file" id="file">
+        <div>Proximity</div>
+        <input type="number" id="radius" value="30">
+        <div>Precision</div>
+        <input type="number" id="candidates" value="10">
+        <div>Opacity</div>
+        <input type="range" id="opacity" value="1" max="1" min="0" step="0.01">
+        <div>
+          <button id="run">run</button>
+          <button id="hide">hide</button>
+        </div>
+      </div>
+      <a id="show">options</a>
     </div>
   </body>
 </html>
