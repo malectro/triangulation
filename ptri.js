@@ -1,7 +1,9 @@
 importScripts('bower_components/poly2tri/dist/poly2tri.js');
 
-function ptri(points, canvas) {
-  var polygons = [];
+var polygons = [];
+var points = [];
+
+function ptri(pointList, canvas) {
   var contour = [
       new poly2tri.Point(0, 0),
       new poly2tri.Point(canvas.width, 0),
@@ -9,9 +11,10 @@ function ptri(points, canvas) {
       new poly2tri.Point(0, canvas.height)
   ];
   var swctx = new poly2tri.SweepContext(contour);
-  swctx.addPoints(points.map(function (point) {
+  points = pointList.map(function (point) {
     return new poly2tri.Point(point.x, point.y);
-  }));
+  });
+  swctx.addPoints(points);
   var triangles = swctx.triangulate().getTriangles();
 
   polygons = [];
@@ -23,7 +26,7 @@ function ptri(points, canvas) {
 
 self.onmessage = function (event) {
   var polygons = ptri(event.data[0], event.data[1]);
-  self.postMessage(polygons);
+  self.postMessage([polygons, points]);
   self.close();
 };
 

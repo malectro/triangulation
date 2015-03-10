@@ -34,7 +34,7 @@ function drawImg(img) {
 }
 
 function colorForPoint(imgData, p) {
-  var index = Math.round(p.x) * 4 + Math.round(p.y) * canvas.width * 4;
+  var index = Math.floor(p.x) * 4 + Math.floor(p.y) * canvas.width * 4;
   return {
     r: imgData[index],
     g: imgData[index + 1],
@@ -88,7 +88,7 @@ function drawAll() {
 
   ctx.strokeStyle = 'black';
   for (var polygon of polygons) {
-    ctx.fillStyle = polygon.color;
+    ctx.fillStyle = polygon.color + '';
     pps = polygon.points;
     ctx.beginPath();
     ctx.moveTo(pps[0].x, pps[0].y);
@@ -97,6 +97,8 @@ function drawAll() {
     ctx.lineTo(pps[0].x, pps[0].y);
     ctx.fill();
   }
+
+  requestAnimationFrame(drawAll);
 }
 
 function run() {
@@ -114,7 +116,8 @@ function run() {
 
     var worker = new Worker('ptri.js');
     worker.onmessage = function (event) {
-      polygons = event.data;
+      polygons = event.data[0];
+      points = event.data[1];
       if (currentImage.loaded) {
         drawImg(currentImage);
       }
@@ -175,6 +178,12 @@ document.getElementById('hide').addEventListener('click', function () {
 });
 document.getElementById('show').addEventListener('click', function () {
   controls.className = '';
+});
+
+canvas.addEventListener('mousemove', function (event) {
+  var closest = quadtreeClosest(quadtree, event);
+  closest.x += event.movementX;
+  closest.y += event.movementY;
 });
 
 run();
