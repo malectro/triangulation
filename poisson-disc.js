@@ -19,7 +19,9 @@ function drawImg(img) {
   var imgData = ctx1.getImageData(0, 0, canvas1.width, canvas1.height);
 
   var ps;
-  for (var poly of polygons) {
+  var poly;
+  for (var i = 0; i < polygons.length; i++) {
+    poly = polygons[i];
     ps = poly.points;
     poly.c = {
       x: (ps[0].x + ps[1].x + ps[2].x) / 3,
@@ -87,7 +89,9 @@ function drawAll() {
   ctx.clearRect(0, 0, 1000000, 1000000);
 
   ctx.strokeStyle = 'black';
-  for (var polygon of polygons) {
+  var polygon;
+  for (var i = 0; i < polygons.length; i++) {
+    polygon = polygons[i];
     ctx.fillStyle = polygon.color + '';
     pps = polygon.points;
     ctx.beginPath();
