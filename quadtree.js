@@ -107,6 +107,34 @@ function quadtreeClosestRecurse(qt, point, best) {
   return best;
 }
 
+function quadtreeIsWithin(qt, point, radius) {
+  return quadtreeIsWithinRecurse(qt, point, radius, []);
+}
+
+function quadtreeIsWithinRecurse(qt, point, radius, points) {
+  if (point.x < qt.x - radius || point.y < qt.y - radius
+      || point.x > qt.x + qt.width + radius || point.y > qt.y + qt.height + radius) {
+      return points;
+  }
+
+  if (qt.point) {
+    var dist = distance(point, qt.point);
+
+    if (dist < radius) {
+      qt.point.d = dist;
+      points.push(qt.point);
+    }
+  }
+
+  for (var child of qt.regions) {
+    if (child) {
+      quadtreeIsWithinRecurse(child, point, radius, points);
+    }
+  }
+
+  return points;
+}
+
 function quadtreeFits(qt, point) {
   if (point.x < qt.x - RADIUS || point.y < qt.y - RADIUS
       || point.x > qt.x + qt.width + RADIUS || point.y > qt.y + qt.height + RADIUS) {
@@ -132,6 +160,7 @@ function quadtreeFits(qt, point) {
   return true;
 }
 
+/*
 function quadtreeClosestRecurse(qt, point, best) {
   if (point.x < qt.x - best.d || point.y < qt.y - best.d
       || point.x > qt.x + qt.width + best.d || point.y > qt.y + qt.height + best.d) {
@@ -157,6 +186,7 @@ function quadtreeClosestRecurse(qt, point, best) {
 
   return best;
 }
+*/
 
 function distance(p1, p2) {
   if (!p1 || !p2) {

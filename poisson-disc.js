@@ -58,7 +58,7 @@ ctx.fillStyle = 'black';
 
 // the algorithm
 const PI2 = Math.PI * 2;
-var RADIUS = 20;
+var RADIUS = 50;
 var RADIUS2 = RADIUS * 2;
 var CANDIDATES = 10;
 const INTERVAL = 20;
@@ -86,11 +86,41 @@ function colorToString() {
 }
 
 function drawAll() {
+  var vx, vy;
+  var i, j, k, poly, point, sibling;
+  /*
+  for (i = 0; i < points.length; i++) {
+    point = points[i];
+
+    vx = point.vx * 0.2;
+    vy = point.vy * 0.2;
+
+    if (vx + vy > 0) {
+      for (j = 0; j < point.polygons.length; j++) {
+        poly = point.polygons[j];
+        for (k = 0; k < poly.points.length; k++) {
+          sibling = poly.points[k];
+          sibling.vx += vx;
+          sibling.vy += vy;
+        }
+      }
+    }
+  }
+  */
+
+  for (i = 0; i < points.length; i++) {
+    point = points[i];
+    point.x += point.vx;
+    point.y += point.vy;
+    point.vx = point.vx * 0.5;
+    point.vy = point.vy * 0.5;
+  }
+
   ctx.clearRect(0, 0, 1000000, 1000000);
 
   ctx.strokeStyle = 'black';
   var polygon;
-  for (var i = 0; i < polygons.length; i++) {
+  for (i = 0; i < polygons.length; i++) {
     polygon = polygons[i];
     ctx.fillStyle = polygon.color + '';
     pps = polygon.points;
@@ -108,6 +138,23 @@ function drawAll() {
 function run() {
   runButton.disabled = true;
 
+  var begin = (new Date()) - 0;
+  var poisson = new Worker('poisson-ptri.js');
+
+  poisson.onmessage = function (event) {
+    polygons = event.data[0];
+    points = event.data[1];
+    quadtree = event.data[2];
+    if (currentImage.loaded) {
+      drawImg(currentImage);
+    }
+    console.log('poisson polytri took ms', (new Date()) - begin);
+    runButton.disabled = false;
+  };
+
+  poisson.postMessage([RADIUS, CANDIDATES, canvas.width, canvas.height]);
+
+  /*
   var begin = (new Date()) - 0;
   var poisson = new Worker('poisson.js');
 
@@ -133,6 +180,7 @@ function run() {
   };
 
   poisson.postMessage([RADIUS, CANDIDATES, canvas.width, canvas.height]);
+  */
 }
 
 var opacity;
@@ -184,18 +232,35 @@ document.getElementById('show').addEventListener('click', function () {
   controls.className = '';
 });
 
-canvas.addEventListener('mousemove', function (event) {
+canvas.addEventListener('mousemove', _.throttle(function (event) {
+  /*
   var closest = quadtreeClosest(quadtree, event);
-  closest.x += event.movementX;
-  closest.y += event.movementY;
-});
+
+  closest.vx += event.movementX * 0.5;
+  closest.vy += event.movementY * 0.5;
+  console.log(closest);
+  */
+
+  var radius = 50;
+  var points = quadtreeIsWithin(quadtree, event, radius);
+  var magnitude;
+  for (var i = 0; i < points.length; i++) {
+    point = points[i];
+    magnitude = (radius - point.d) / radius;
+    point.vx = event.movementX * magnitude;
+    point.vy = event.movementY * magnitude;
+  }
+
+}, 10));
 
 run();
 
-/*
 document.body.addEventListener('click', function (event) {
   var click = {x: event.offsetX, y: event.offsetY};
 
+  var points = quadtreeIsWithin(quadtree, click, 100);
+  console.log(points);
+  /*
   var start = new Date() - 0;
 
   var bp = null;
@@ -214,5 +279,6 @@ document.body.addEventListener('click', function (event) {
 
   quadtreeClosest(quadtree, click);
   console.log('quadtree found point in ms', new Date() - start);
+  */
 });
-*/
+
