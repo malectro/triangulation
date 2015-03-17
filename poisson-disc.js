@@ -59,7 +59,7 @@ ctx.fillStyle = 'black';
 
 // the algorithm
 const PI2 = Math.PI * 2;
-var RADIUS = 50;
+var RADIUS = 10;
 var RADIUS2 = RADIUS * 2;
 var CANDIDATES = 10;
 const INTERVAL = 20;
@@ -215,24 +215,31 @@ var ripples = [];
 function drawWebGl() {
   requestAnimationFrame(drawWebGl);
 
-  var time = new Date() - animStart;
+  var currentTime = new Date();
+  var time = currentTime - animStart;
 
   var frequency = 2 * 1000;
   var secondsPerCycle = 2000;
   var radiansPerCycle = (time / secondsPerCycle) * Math.PI * 2;
   var radiansPerDistance;
-  var ripple, vertex, distance;
+  var ripple, vertex, distance, rippleTime;
 
-  for (var i = 0; i < ripples.length; i++) {
+  for (var i = 0; i < plane.geometry.vertices.length; i++) {
+    vertex = plane.geometry.vertices[i];
+    vertex.z = 0;
+  }
+
+  for (i = 0; i < ripples.length; i++) {
     ripple = ripples[i];
-    ripple.radius = ripple.speed * time;
+    rippleTime = currentTime - ripple.start;
+    ripple.radius = ripple.speed * rippleTime;
 
     for (var j = 0; j < plane.geometry.vertices.length; j++) {
       vertex = plane.geometry.vertices[j];
       distance = vertex.distanceTo(ripple.center);
       if (distance < ripple.radius) {
-        radiansPerDistance = (time - vertex.distanceTo(ripple.center) / ripple.speed) / secondsPerCycle;
-        vertex.z = Math.cos(radiansPerDistance * Math.PI * 2 + Math.PI) * 10 * ripple.magnitude;
+        radiansPerDistance = (rippleTime - vertex.distanceTo(ripple.center) / ripple.speed) / secondsPerCycle;
+        vertex.z += Math.cos(radiansPerDistance * Math.PI * 2) * 10 * ripple.magnitude;
       }
     }
 
@@ -298,6 +305,7 @@ function run() {
 }
 
 var opacity;
+/*
 canvas.addEventListener('mousedown', function () {
   opacity = canvas.style.opacity;
   canvas.style.opacity = 0;
@@ -305,6 +313,7 @@ canvas.addEventListener('mousedown', function () {
 canvas.addEventListener('mouseup', function () {
   canvas.style.opacity = opacity;
 });
+*/
 
 var input = document.getElementById('file');
 var result;
@@ -370,7 +379,7 @@ canvas.addEventListener('mousemove', _.throttle(function (event) {
 
 run();
 
-document.body.addEventListener('click', function (event) {
+canvas.addEventListener('click', function (event) {
   var click = {x: event.offsetX, y: event.offsetY};
 
   ripples.push({
@@ -379,6 +388,7 @@ document.body.addEventListener('click', function (event) {
     decay: 0.999,
     speed: 0.1,
     radius: 0,
+    start: new Date() - 0,
   });
 
   /*
