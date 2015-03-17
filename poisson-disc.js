@@ -164,17 +164,6 @@ function initWebGl() {
     }
   }
 
-  var idx;
-  for (i = 0; i < polygons.length; i++) {
-    poly = polygons[i];
-    for (j = 0; j < poly.points.length; j++) {
-      if (!_.isNumber(poly.pointIndices[j])) {
-        idx = points.indexOf(poly.points[j]);
-        debugger;
-      }
-    }
-  }
-
   var normal, color;
   var planeGeometry = new THREE.Geometry();
   for (i = 0; i < points.length; i++) {
@@ -188,24 +177,35 @@ function initWebGl() {
     planeGeometry.faces.push(new THREE.Face3(poly.pointIndices[0], poly.pointIndices[1], poly.pointIndices[2], normal, color, 0));
   }
 
-  var material = new THREE.MeshBasicMaterial({color: 0xffffff, side: THREE.DoubleSide, vertexColors: THREE.FaceColors});
+  planeGeometry.computeFaceNormals();
+
+  //var material = new THREE.MeshBasicMaterial({color: 0xffffff, side: THREE.DoubleSide, vertexColors: THREE.FaceColors});
+  var material = new THREE.MeshLambertMaterial({color: 0xffffff, side: THREE.DoubleSide, vertexColors: THREE.FaceColors});
   var materials = new THREE.MeshFaceMaterial([material]);
-  plane = new THREE.Mesh(planeGeometry, materials);
+  plane = new THREE.Mesh(planeGeometry, material);
+
+  planeScene = new THREE.Scene();
+  planeScene.position.y += canvas.height / 2;
+  planeScene.position.x -= canvas.width / 2;
+  planeScene.add(plane);
 
   scene = new THREE.Scene();
-  scene.position.y += canvas.height / 2;
-  scene.position.x -= canvas.width / 2;
-  scene.add(plane);
+  var light = new THREE.AmbientLight(0x404040); // soft white light
+  scene.add(light);
 
-  camera.position.z = 500;
+  var directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+  directionalLight.position.set(1, 1, 1).normalize();
+  scene.add(directionalLight);
 
   /*
-var geometry = new THREE.BoxGeometry( 1, 1, 1 );
-			var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-			var cube = new THREE.Mesh( geometry, material );
-			scene.add( cube );
-      */
+  var pointLight = new THREE.PointLight( 0xff0000, 1, 0 );
+  pointLight.position.set( 50, 50, 600 );
+  scene.add( pointLight );
+  */
 
+  scene.add(planeScene);
+
+  camera.position.z = 500;
 
   animStart = new Date() - 0;
   requestAnimationFrame(drawWebGl);
@@ -232,16 +232,19 @@ function drawWebGl() {
       distance = vertex.distanceTo(ripple.center);
       if (distance < ripple.radius) {
         radiansPerDistance = (time - vertex.distanceTo(ripple.center) / ripple.speed) / secondsPerCycle;
-        vertex.z = Math.sin(radiansPerDistance * Math.PI * 2) * 10 * ripple.magnitude;
+        vertex.z = Math.cos(radiansPerDistance * Math.PI * 2 + Math.PI) * 10 * ripple.magnitude;
       }
     }
 
     ripple.magnitude *= ripple.decay;
   }
-  plane.geometry.verticesNeedUpdate = true;
   ripples = _.filter(ripples, function (ripple) {
     return ripple.magnitude > 0.01;
   });
+
+  plane.geometry.verticesNeedUpdate = true;
+  plane.geometry.normalsNeedUpdate = true;
+  plane.geometry.computeFaceNormals();
 
   renderer.render(scene, camera);
 }
