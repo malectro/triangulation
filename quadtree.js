@@ -196,3 +196,35 @@ function distance(p1, p2) {
   var dy = p1.y - p2.y;
   return Math.sqrt(dx * dx + dy * dy);
 }
+
+function bruteWithin(points, center, radius) {
+  var point, d;
+  var within = [];
+  for (var i = 0; i < points.length; i++) {
+    point = points[i];
+    d = distance(point, center);
+    if (d < radius) {
+      point.d = d;
+      within.push(point);
+    }
+  }
+  return within;
+}
+
+function bruteClosest(points, center) {
+  var point, d, best;
+  var best = points[0];
+  best.d = distance(best, center);
+
+  for (var i = 1; i < points.length; i++) {
+    point = points[i];
+    d = distance(point, center);
+    if (d < best.d) {
+      point.d = d;
+      best = point;
+    }
+  }
+
+  return best;
+}
+

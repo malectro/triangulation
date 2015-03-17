@@ -32,7 +32,8 @@ function drawImg(img) {
 
   currentImage = img;
 
-  requestAnimationFrame(drawAll);
+  //requestAnimationFrame(drawAll);
+  initWebGl();
 }
 
 function colorForPoint(imgData, p) {
@@ -106,7 +107,6 @@ function drawAll() {
       }
     }
   }
-  */
 
   for (i = 0; i < points.length; i++) {
     point = points[i];
@@ -115,6 +115,7 @@ function drawAll() {
     point.vx = point.vx * 0.5;
     point.vy = point.vy * 0.5;
   }
+  */
 
   ctx.clearRect(0, 0, 1000000, 1000000);
 
@@ -133,6 +134,116 @@ function drawAll() {
   }
 
   requestAnimationFrame(drawAll);
+}
+
+var scene;
+var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+var renderer = new THREE.WebGLRenderer();
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.domElement.style.zIndex = 3;
+document.body.appendChild(renderer.domElement);
+
+canvas.style.display = 'none';
+canvas = renderer.domElement;
+
+var webGlPoints = [];
+var plane;
+var animStart;
+
+function initWebGl() {
+  var point, poly, idx;
+  for (var i = 0; i < points.length; i++) {
+    point = points[i];
+    for (var j = 0; j < point.polygons.length; j++) {
+      poly = point.polygons[j];
+      if (!poly.pointIndices) {
+        poly.pointIndices = [];
+      }
+      idx = poly.points.indexOf(point);
+      poly.pointIndices[idx] = i;
+    }
+  }
+
+  var idx;
+  for (i = 0; i < polygons.length; i++) {
+    poly = polygons[i];
+    for (j = 0; j < poly.points.length; j++) {
+      if (!_.isNumber(poly.pointIndices[j])) {
+        idx = points.indexOf(poly.points[j]);
+        debugger;
+      }
+    }
+  }
+
+  var normal, color;
+  var planeGeometry = new THREE.Geometry();
+  for (i = 0; i < points.length; i++) {
+    point = points[i];
+    planeGeometry.vertices.push(new THREE.Vector3(point.x, -point.y, 0));
+  }
+  for (i = 0; i < polygons.length; i++) {
+    poly = polygons[i];
+    color = new THREE.Color(poly.color + '');
+    normal = new THREE.Vector3(0, 0, 1);
+    planeGeometry.faces.push(new THREE.Face3(poly.pointIndices[0], poly.pointIndices[1], poly.pointIndices[2], normal, color, 0));
+  }
+
+  var material = new THREE.MeshBasicMaterial({color: 0xffffff, side: THREE.DoubleSide, vertexColors: THREE.FaceColors});
+  var materials = new THREE.MeshFaceMaterial([material]);
+  plane = new THREE.Mesh(planeGeometry, materials);
+
+  scene = new THREE.Scene();
+  scene.position.y += canvas.height / 2;
+  scene.position.x -= canvas.width / 2;
+  scene.add(plane);
+
+  camera.position.z = 500;
+
+  /*
+var geometry = new THREE.BoxGeometry( 1, 1, 1 );
+			var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+			var cube = new THREE.Mesh( geometry, material );
+			scene.add( cube );
+      */
+
+
+  animStart = new Date() - 0;
+  requestAnimationFrame(drawWebGl);
+}
+
+var ripples = [];
+function drawWebGl() {
+  requestAnimationFrame(drawWebGl);
+
+  var time = new Date() - animStart;
+
+  var frequency = 2 * 1000;
+  var secondsPerCycle = 2000;
+  var radiansPerCycle = (time / secondsPerCycle) * Math.PI * 2;
+  var radiansPerDistance;
+  var ripple, vertex, distance;
+
+  for (var i = 0; i < ripples.length; i++) {
+    ripple = ripples[i];
+    ripple.radius = ripple.speed * time;
+
+    for (var j = 0; j < plane.geometry.vertices.length; j++) {
+      vertex = plane.geometry.vertices[j];
+      distance = vertex.distanceTo(ripple.center);
+      if (distance < ripple.radius) {
+        radiansPerDistance = (time - vertex.distanceTo(ripple.center) / ripple.speed) / secondsPerCycle;
+        vertex.z = Math.sin(radiansPerDistance * Math.PI * 2) * 10 * ripple.magnitude;
+      }
+    }
+
+    ripple.magnitude *= ripple.decay;
+  }
+  plane.geometry.verticesNeedUpdate = true;
+  ripples = _.filter(ripples, function (ripple) {
+    return ripple.magnitude > 0.01;
+  });
+
+  renderer.render(scene, camera);
 }
 
 function run() {
@@ -232,35 +343,45 @@ document.getElementById('show').addEventListener('click', function () {
   controls.className = '';
 });
 
+/*
 canvas.addEventListener('mousemove', _.throttle(function (event) {
-  /*
-  var closest = quadtreeClosest(quadtree, event);
+  //var closest = quadtreeClosest(quadtree, event);
+  var closest = bruteClosest(points, event);
 
   closest.vx += event.movementX * 0.5;
   closest.vy += event.movementY * 0.5;
-  console.log(closest);
-  */
 
   var radius = 50;
-  var points = quadtreeIsWithin(quadtree, event, radius);
+  //var points = quadtreeIsWithin(quadtree, event, radius);
+  var closest = bruteWithin(points, event, radius);
   var magnitude;
-  for (var i = 0; i < points.length; i++) {
-    point = points[i];
+  for (var i = 0; i < closest.length; i++) {
+    point = closest[i];
     magnitude = (radius - point.d) / radius;
     point.vx = event.movementX * magnitude;
     point.vy = event.movementY * magnitude;
   }
 
 }, 10));
+*/
 
 run();
 
 document.body.addEventListener('click', function (event) {
   var click = {x: event.offsetX, y: event.offsetY};
 
-  var points = quadtreeIsWithin(quadtree, click, 100);
-  console.log(points);
+  ripples.push({
+    center: new THREE.Vector3(click.x, -click.y, 0),
+    magnitude: 1,
+    decay: 0.999,
+    speed: 0.1,
+    radius: 0,
+  });
+
   /*
+  //var points = quadtreeIsWithin(quadtree, click, 100);
+  var closest = bruteWithin(points, click, 100);
+  console.log(closest);
   var start = new Date() - 0;
 
   var bp = null;

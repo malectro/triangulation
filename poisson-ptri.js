@@ -23,7 +23,6 @@ function poisson() {
     y: Math.random() * HEIGHT,
     vx: 0,
     vy: 0,
-    polygons: [],
   };
   points.push(point);
   active.push(point);
@@ -44,7 +43,6 @@ function poisson() {
         y: current.y - Math.sin(angle) * far,
         vx: 0,
         vy: 0,
-        polygons: [],
       };
       var good = true;
 
@@ -74,10 +72,16 @@ function poisson() {
 
 function ptri(pointList, canvas) {
   var contour = [
-      new poly2tri.Point(0, 0),
-      new poly2tri.Point(canvas.width, 0),
-      new poly2tri.Point(canvas.width, canvas.height),
-      new poly2tri.Point(0, canvas.height)
+    {x: 0, y: 0},
+    {x: canvas.width, y: 0},
+    {x: canvas.width, y: canvas.height},
+    {x: 0, y: canvas.height},
+    /*
+    new poly2tri.Point(0, 0),
+    new poly2tri.Point(canvas.width, 0),
+    new poly2tri.Point(canvas.width, canvas.height),
+    new poly2tri.Point(0, canvas.height)
+    */
   ];
   var swctx = new poly2tri.SweepContext(contour);
 
@@ -98,20 +102,15 @@ function ptri(pointList, canvas) {
 
   for (var poly of polygons) {
     for (var point of poly.points) {
-      point.polygons = [];
+      if (!point.polygons) {
+        point.polygons = [];
+      }
       point.polygons.push(poly);
     }
   }
 
-  return [polygons, pointList, poly];
+  return [polygons, contour.concat(pointList), poly];
 }
-
-self.onmessage = function (event) {
-  var results = ptri(event.data[0], event.data[1]);
-  self.postMessage(results);
-  self.close();
-};
-
 
 self.onmessage = function (event) {
   RADIUS = event.data[0];
@@ -122,6 +121,8 @@ self.onmessage = function (event) {
   poisson();
   var results = ptri(points, {width: WIDTH, height: HEIGHT});
 
-  postMessage([results[0], points, quadtree]);
+  postMessage([results[0], results[1], quadtree]);
+
+  self.close();
 };
 
