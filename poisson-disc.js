@@ -438,11 +438,11 @@ var audio;
   master.connect(masterGain);
 
   var srces = [
-    '/pianos/b.wav',
-    '/pianos/c-sharp.wav',
-    '/pianos/e.wav',
-    '/pianos/f-sharp.wav',
-    '/pianos/g-sharp.wav',
+    'pianos/b.wav',
+    'pianos/c-sharp.wav',
+    'pianos/e.wav',
+    'pianos/f-sharp.wav',
+    'pianos/g-sharp.wav',
   ];
   var buffers = {};
   var bufferArray = [];
