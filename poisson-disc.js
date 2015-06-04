@@ -391,6 +391,13 @@ canvas.addEventListener('click', function (event) {
     start: new Date() - 0,
   });
 
+  var rand = Math.floor(Math.random() * audio.bufferArray.length);
+  var sampler = audio.ctx.createBufferSource();
+  sampler.buffer = audio.bufferArray[rand];
+  sampler.connect(audio.master);
+
+  sampler.start(audio.ctx.currentTime);
+
   /*
   //var points = quadtreeIsWithin(quadtree, click, 100);
   var closest = bruteWithin(points, click, 100);
@@ -415,4 +422,66 @@ canvas.addEventListener('click', function (event) {
   console.log('quadtree found point in ms', new Date() - start);
   */
 });
+
+
+// audio
+var audio;
+
+(function () {
+  var ctx = new webkitAudioContext();
+
+  var masterGain = ctx.createGain();
+  masterGain.gain.setValueAtTime(1.0, ctx.currentTime);
+  masterGain.connect(ctx.destination);
+
+  var master = ctx.createDynamicsCompressor();
+  master.connect(masterGain);
+
+  var srces = [
+    '/pianos/b.wav',
+    '/pianos/c-sharp.wav',
+    '/pianos/e.wav',
+    '/pianos/f-sharp.wav',
+    '/pianos/g-sharp.wav',
+  ];
+  var buffers = {};
+  var bufferArray = [];
+  var count = srces.length;
+  var loaded = false;
+
+  _.each(srces, function (src) {
+    var request = new XMLHttpRequest();
+    request.open('GET', src, true);
+    request.responseType = 'arraybuffer';
+
+    buffers[src] = null;
+
+    // Decode asynchronously
+    request.onload = function () {
+      ctx.decodeAudioData(request.response, function (buffer) {
+        buffers[src] = buffer;
+        count--;
+        console.log("Loaded " + src);
+
+        if (count < 1) {
+          bufferArray = audio.bufferArray = _.toArray(buffers);
+          loaded = true;
+          console.log("Loaded all audio");
+        }
+      }, function () {
+
+      });
+    }
+
+    request.send();
+  });
+
+  audio = {
+    ctx: ctx,
+    masterGain: masterGain,
+    master: master,
+    bufferArray: bufferArray,
+    buffers: buffers,
+  };
+})();
 
