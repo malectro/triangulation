@@ -1,6 +1,6 @@
 // the setup
 var currentImage = new Image();
-currentImage.src = 'test.png';
+currentImage.src = 'hubble.jpg';
 currentImage.addEventListener('load', function () {
   currentImage.loaded = true;
   drawImg(currentImage);
