@@ -4,6 +4,7 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
+    "bower": "^1.7.7",
     "express": "4.x"
   },
   "engines": {
@@ -11,6 +12,7 @@
     "npm": "2.0.x"
   },
   "scripts": {
-    "start": "node app.js"
+    "start": "node app.js",
+    "bower": "bower install"
   }
 }
