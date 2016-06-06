@@ -1,4 +1,3 @@
-// the setup
 var currentImage = new Image();
 currentImage.src = 'hubble.jpg';
 currentImage.addEventListener('load', function () {
@@ -379,7 +378,13 @@ canvas.addEventListener('mousemove', _.throttle(function (event) {
 
 run();
 
-canvas.addEventListener('click', function (event) {
+function handleCanvasTap(event) {
+  if (event.handled) {
+    return;
+  }
+
+  event.handled = true;
+
   var click = {x: event.offsetX, y: event.offsetY};
 
   ripples.push({
@@ -421,7 +426,10 @@ canvas.addEventListener('click', function (event) {
   quadtreeClosest(quadtree, click);
   console.log('quadtree found point in ms', new Date() - start);
   */
-});
+}
+
+canvas.addEventListener('touchstart', handleCanvasTap);
+canvas.addEventListener('click', handleCanvasTap);
 
 
 // audio
