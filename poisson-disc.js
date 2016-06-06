@@ -379,13 +379,15 @@ canvas.addEventListener('mousemove', _.throttle(function (event) {
 run();
 
 function handleCanvasTap(event) {
-  if (event.handled) {
-    return;
+  event.preventDefault();
+
+  var click;
+  if (event.touches) {
+    touch = event.changedTouches[0];
+    click = {x: touch.pageX, y: touch.pageY};
+  } else {
+    click = {x: event.offsetX, y: event.offsetY};
   }
-
-  event.handled = true;
-
-  var click = {x: event.offsetX, y: event.offsetY};
 
   ripples.push({
     center: new THREE.Vector3(click.x, -click.y, 0),
