@@ -51,7 +51,14 @@
         }
     </style>
     <script src="bower_components/underscore/underscore.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.min.js"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.min.js"></script> -->
+    <script src="node_modules/three/build/three.js"></script>
+    <script src="node_modules/three/examples/js/shaders/SSAOShader.js"></script>
+    <script src="node_modules/three/examples/js/shaders/CopyShader.js"></script>
+    <script src="node_modules/three/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="node_modules/three/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="node_modules/three/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="node_modules/three/examples/js/postprocessing/MaskPass.js"></script>
     <script src="quadtree.js"></script>
     <script src="poisson-disc.js?2" async></script>
   </head>
@@ -64,7 +71,7 @@
         <div>Precision</div>
         <input type="number" id="candidates" value="10">
         <div>Opacity</div>
-        <input type="range" id="opacity" value="0.5" max="1" min="0" step="0.01">
+        <input type="range" id="opacity" value="1" max="1" min="0" step="0.01">
         <div>
           <button id="run">run</button>
           <button id="hide">hide</button>

@@ -135,11 +135,15 @@ function drawAll() {
   requestAnimationFrame(drawAll);
 }
 
+
 var scene;
 var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 var renderer = new THREE.WebGLRenderer();
+
+renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.domElement.style.zIndex = 3;
+
 document.body.appendChild(renderer.domElement);
 
 canvas.style.display = 'none';
@@ -147,9 +151,16 @@ canvas = renderer.domElement;
 
 var webGlPoints = [];
 var plane;
-var animStart;
+
+let depthMaterial;
+let depthRenderTarget;
+let effectComposer;
 
 function initWebGl() {
+  if (!points.length) {
+    return;
+  }
+
   var point, poly, idx;
   for (var i = 0; i < points.length; i++) {
     point = points[i];
@@ -192,7 +203,7 @@ function initWebGl() {
   var light = new THREE.AmbientLight(0x404040); // soft white light
   scene.add(light);
 
-  var directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+  var directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
   directionalLight.position.set(1, 1, 1).normalize();
   scene.add(directionalLight);
 
@@ -206,16 +217,45 @@ function initWebGl() {
 
   camera.position.z = 500;
 
-  animStart = new Date() - 0;
+  initPostprocessing();
+
   requestAnimationFrame(drawWebGl);
 }
 
+function initPostprocessing() {
+  const renderPass = new THREE.RenderPass(scene, camera);
+
+  depthMaterial = new THREE.MeshDepthMaterial();
+  depthMaterial.depthPacking = THREE.RGBADepthPacking;
+  depthMaterial.blending = THREE.NoBlending;
+
+  depthRenderTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, {
+    minFilter: THREE.LinearFilter,
+    magFilter: THREE.LinearFilter,
+  });
+
+  const ssaoPass = new THREE.ShaderPass(THREE.SSAOShader);
+  ssaoPass.renderToScreen = true;
+
+  const uniforms = ssaoPass.uniforms;
+  uniforms['tDepth'].value = depthRenderTarget.texture;
+  uniforms['size'].value.set(window.innerWidth, window.innerHeight);
+  uniforms['cameraNear'].value = camera.near;
+  uniforms['cameraFar'].value = camera.far;
+  uniforms['onlyAO'].value = true; // not sure what this means
+  uniforms['aoClamp'].value = 0.3;
+  uniforms['lumInfluence'].value = 0.5;
+
+  effectComposer = new THREE.EffectComposer(renderer);
+  effectComposer.addPass(renderPass);
+  //effectComposer.addPass(ssaoPass);
+}
+
 var ripples = [];
-function drawWebGl() {
+function drawWebGl(time) {
   requestAnimationFrame(drawWebGl);
 
   var currentTime = new Date();
-  var time = currentTime - animStart;
 
   var frequency = 2 * 1000;
   var secondsPerCycle = 2000;
@@ -252,7 +292,13 @@ function drawWebGl() {
   plane.geometry.normalsNeedUpdate = true;
   plane.geometry.computeFaceNormals();
 
-  renderer.render(scene, camera);
+  //renderer.render(scene, camera);
+
+  scene.overrideMaterial = depthMaterial;
+  renderer.render(scene, camera, depthRenderTarget, true);
+
+  scene.overrideMaterial = null;
+  effectComposer.render();
 }
 
 function run() {
@@ -438,7 +484,7 @@ canvas.addEventListener('click', handleCanvasTap);
 var audio;
 
 (function () {
-  var ctx = new webkitAudioContext();
+  var ctx = new AudioContext();
 
   var masterGain = ctx.createGain();
   masterGain.gain.setValueAtTime(1.0, ctx.currentTime);
