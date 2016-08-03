@@ -12,7 +12,7 @@ document.body.appendChild(canvas1);
 var ctx1 = canvas1.getContext('2d');
 
 function drawImg(img) {
-  ctx1.clearRect(0, 0, 10000000, 1000000);
+  ctx1.clearRect(0, 0, canvas1.width, canvas1.height);
   ctx1.drawImage(img, 0, 0, canvas1.width, canvas1.height);
 
   var imgData = ctx1.getImageData(0, 0, canvas1.width, canvas1.height);
@@ -42,6 +42,7 @@ function colorForPoint(imgData, p) {
     g: imgData[index + 1],
     b: imgData[index + 2],
     toString: colorToString,
+    toHexNumber: colorToHexNumber,
   };
 }
 
@@ -83,6 +84,10 @@ function randomColor(variation, base) {
 
 function colorToString() {
   return 'rgb(' + this.r + ',' + this.g + ',' + this.b + ')';
+}
+
+function colorToHexNumber() {
+  return this.r * 65536 + this.g * 256 + this.b;
 }
 
 function drawAll() {
@@ -140,7 +145,7 @@ var scene;
 var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 var renderer = new THREE.WebGLRenderer();
 
-renderer.setPixelRatio(window.devicePixelRatio);
+//renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.domElement.style.zIndex = 3;
 
@@ -182,7 +187,7 @@ function initWebGl() {
   }
   for (i = 0; i < polygons.length; i++) {
     poly = polygons[i];
-    color = new THREE.Color(poly.color + '');
+    color = new THREE.Color(poly.color.toHexNumber());
     normal = new THREE.Vector3(0, 0, 1);
     planeGeometry.faces.push(new THREE.Face3(poly.pointIndices[0], poly.pointIndices[1], poly.pointIndices[2], normal, color, 0));
   }
@@ -223,7 +228,7 @@ function initWebGl() {
 }
 
 function initPostprocessing() {
-  const renderPass = new THREE.RenderPass(scene, camera);
+  //const renderPass = new THREE.RenderPass(scene, camera);
 
   depthMaterial = new THREE.MeshDepthMaterial();
   depthMaterial.depthPacking = THREE.RGBADepthPacking;
@@ -247,7 +252,7 @@ function initPostprocessing() {
   uniforms['lumInfluence'].value = 0.5;
 
   effectComposer = new THREE.EffectComposer(renderer);
-  effectComposer.addPass(renderPass);
+  //effectComposer.addPass(renderPass);
   //effectComposer.addPass(ssaoPass);
 }
 
@@ -292,13 +297,15 @@ function drawWebGl(time) {
   plane.geometry.normalsNeedUpdate = true;
   plane.geometry.computeFaceNormals();
 
-  //renderer.render(scene, camera);
+  renderer.render(scene, camera);
 
+  /*
   scene.overrideMaterial = depthMaterial;
   renderer.render(scene, camera, depthRenderTarget, true);
 
   scene.overrideMaterial = null;
   effectComposer.render();
+  */
 }
 
 function run() {
@@ -377,11 +384,13 @@ var radiusInput = document.getElementById('radius');
 radiusInput.addEventListener('change', function () {
   RADIUS = parseInt(radiusInput.value, 10);
 });
+RADIUS = parseInt(radiusInput.value, 10);
 
 var candidatesInput = document.getElementById('candidates');
 candidatesInput.addEventListener('change', function () {
   CANDIDATES = parseInt(candidatesInput.value, 10);
 });
+CANDIDATES = parseInt(candidatesInput.value, 10);
 
 var opacityInput = document.getElementById('opacity');
 opacityInput.addEventListener('change', function () {

@@ -121,6 +121,7 @@ self.onmessage = function (event) {
   poisson();
   var results = ptri(points, {width: WIDTH, height: HEIGHT});
 
+  //console.log('hi', results);
   postMessage([results[0], results[1], quadtree]);
 
   self.close();
