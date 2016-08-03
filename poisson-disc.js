@@ -208,7 +208,7 @@ function initWebGl() {
   var light = new THREE.AmbientLight(0x404040); // soft white light
   scene.add(light);
 
-  var directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+  var directionalLight = new THREE.DirectionalLight(0xffffff, 1);
   directionalLight.position.set(1, 1, 1).normalize();
   scene.add(directionalLight);
 
@@ -228,7 +228,7 @@ function initWebGl() {
 }
 
 function initPostprocessing() {
-  //const renderPass = new THREE.RenderPass(scene, camera);
+  const renderPass = new THREE.RenderPass(scene, camera);
 
   depthMaterial = new THREE.MeshDepthMaterial();
   depthMaterial.depthPacking = THREE.RGBADepthPacking;
@@ -247,13 +247,14 @@ function initPostprocessing() {
   uniforms['size'].value.set(window.innerWidth, window.innerHeight);
   uniforms['cameraNear'].value = camera.near;
   uniforms['cameraFar'].value = camera.far;
-  uniforms['onlyAO'].value = true; // not sure what this means
+  uniforms['onlyAO'].value = false; // not sure what this means
   uniforms['aoClamp'].value = 0.3;
   uniforms['lumInfluence'].value = 0.5;
 
   effectComposer = new THREE.EffectComposer(renderer);
-  //effectComposer.addPass(renderPass);
-  //effectComposer.addPass(ssaoPass);
+  effectComposer.setSize(window.innerWidth, window.innerHeight);
+  effectComposer.addPass(renderPass);
+  effectComposer.addPass(ssaoPass);
 }
 
 var ripples = [];
@@ -297,15 +298,13 @@ function drawWebGl(time) {
   plane.geometry.normalsNeedUpdate = true;
   plane.geometry.computeFaceNormals();
 
-  renderer.render(scene, camera);
+  //renderer.render(scene, camera);
 
-  /*
   scene.overrideMaterial = depthMaterial;
   renderer.render(scene, camera, depthRenderTarget, true);
 
   scene.overrideMaterial = null;
   effectComposer.render();
-  */
 }
 
 function run() {
