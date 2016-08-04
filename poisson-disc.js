@@ -69,6 +69,8 @@ var points = [];
 var active = [];
 var quadtree;
 
+let useSsao = true;
+
 function randomColor(variation, base) {
   variation = variation || 10;
   base = base || {r: 120, g: 120, b: 120};
@@ -298,13 +300,15 @@ function drawWebGl(time) {
   plane.geometry.normalsNeedUpdate = true;
   plane.geometry.computeFaceNormals();
 
-  //renderer.render(scene, camera);
+  if (useSsao) {
+    scene.overrideMaterial = depthMaterial;
+    renderer.render(scene, camera, depthRenderTarget, true);
 
-  scene.overrideMaterial = depthMaterial;
-  renderer.render(scene, camera, depthRenderTarget, true);
-
-  scene.overrideMaterial = null;
-  effectComposer.render();
+    scene.overrideMaterial = null;
+    effectComposer.render();
+  } else {
+    renderer.render(scene, camera);
+  }
 }
 
 function run() {
@@ -396,6 +400,12 @@ opacityInput.addEventListener('change', function () {
   canvas.style.opacity = parseFloat(opacityInput.value, 10);
 });
 canvas.style.opacity = parseFloat(opacityInput.value, 10);
+
+const ssaoInput = document.getElementById('ssao');
+ssaoInput.addEventListener('change', () => {
+  useSsao = ssaoInput.checked;
+});
+useSsao = ssaoInput.checked;
 
 var runButton = document.getElementById('run');
 runButton.addEventListener('click', run);

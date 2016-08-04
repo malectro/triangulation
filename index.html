@@ -67,11 +67,16 @@
       <div id="content">
         <input type="file" id="file">
         <div>Proximity</div>
-        <input type="number" id="radius" value="60">
+        <input type="number" id="radius" value="40">
         <div>Precision</div>
         <input type="number" id="candidates" value="10">
         <div>Opacity</div>
         <input type="range" id="opacity" value="1" max="1" min="0" step="0.01">
+        <div>
+          <label>Ambient Occlusion
+            <input type="checkbox" id="ssao" checked="checked">
+          </label>
+        </div>
         <div>
           <button id="run">run</button>
           <button id="hide">hide</button>
