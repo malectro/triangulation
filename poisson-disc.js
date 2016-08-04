@@ -11,6 +11,8 @@ canvas1.style.zIndex = 2;
 document.body.appendChild(canvas1);
 var ctx1 = canvas1.getContext('2d');
 
+const defaultColor = makeColor(200, 200, 200);
+
 function drawImg(img) {
   ctx1.clearRect(0, 0, canvas1.width, canvas1.height);
   ctx1.drawImage(img, 0, 0, canvas1.width, canvas1.height);
@@ -26,13 +28,24 @@ function drawImg(img) {
       x: (ps[0].x + ps[1].x + ps[2].x) / 3,
       y: (ps[0].y + ps[1].y + ps[2].y) / 3,
     };
-    poly.color = colorForPoint(imgData.data, poly.c);
+    //poly.color = colorForPoint(imgData.data, poly.c);
+    poly.color = defaultColor;
   }
 
   currentImage = img;
 
   //requestAnimationFrame(drawAll);
   initWebGl();
+}
+
+function makeColor(r, g, b) {
+  return {
+    r,
+    g,
+    b,
+    toString: colorToString,
+    toHexNumber: colorToHexNumber,
+  };
 }
 
 function colorForPoint(imgData, p) {
