@@ -200,7 +200,7 @@ function initWebGl() {
     poly = polygons[i];
     color = new THREE.Color(poly.color.toHexNumber());
     normal = new THREE.Vector3(0, 0, 1);
-    planeGeometry.faces.push(new THREE.Face3(poly.pointIndices[0], poly.pointIndices[1], poly.pointIndices[2], normal, color, 0));
+    planeGeometry.faces.push(new THREE.Face3(poly.pointIndices[2], poly.pointIndices[1], poly.pointIndices[0], normal, color, 0));
   }
 
   planeGeometry.computeFaceNormals();
@@ -208,7 +208,6 @@ function initWebGl() {
   //var material = new THREE.MeshBasicMaterial({color: 0xffffff, side: THREE.DoubleSide, vertexColors: THREE.FaceColors});
   var material = new THREE.MeshLambertMaterial({
     color: 0xffffff,
-    side: THREE.DoubleSide,
     vertexColors: THREE.FaceColors,
   });
   var materials = new THREE.MeshFaceMaterial([material]);
@@ -266,6 +265,39 @@ function initPostprocessing() {
   effectComposer.setSize(window.innerWidth, window.innerHeight);
   effectComposer.addPass(renderPass);
   effectComposer.addPass(ssaoPass);
+}
+
+function initPostprocessing2() {
+  // depth
+  let depthShader = THREE.ShaderLib['distanceRGBA'];
+  //depthShader = THREE.ShaderLib['depth'];
+  const depthUniforms = THREE.UniformsUtils.clone(depthShader.uniforms);
+
+  depthMaterial = new THREE.ShaderMaterial({
+    fragmentShader: depthShader.fragmentShader,
+    vertexShader: depthShader.vertexShader,
+    uniforms: depthUniforms,
+  });
+  depthMaterial.blending = THREE.NoBlending;
+
+  // postprocessing
+  effectComposer = new THREE.EffectComposer(renderer);
+  effectComposer.addPass(new THREE.RenderPass(scene, camera));
+
+  depthRenderTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, {
+    minFilter: THREE.NearestFilter,
+    magFilter: THREE.NearestFilter,
+    format: THREE.RGBAFormat,
+  });
+
+  const effect = new THREE.ShaderPass(THREE.SSAOShader);
+  effect.uniforms['tDepth'].value = depthRenderTarget;
+  effect.uniforms['size'].value.set(window.innerWidth, window.innerHeight);
+  effect.uniforms['cameraNear'].value = camera.near;
+  effect.uniforms['cameraFar'].value = camera.far;
+  effect.renderToScreen = true;
+
+  effectComposer.addPass(effect);
 }
 
 var ripples = [];
