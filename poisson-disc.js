@@ -147,8 +147,7 @@ let scene;
 const fov = 45;
 const zPos = window.innerHeight / (Math.sin((fov / 2) * Math.PI / 180) * 2);
 const camera = new THREE.PerspectiveCamera(fov, window.innerWidth / window.innerHeight, 1, zPos + 100);
-camera.position.z = zPos;
-window.camera = camera;
+camera.position.z = zPos * 0.9;
 
 /*
 window.innerHeight / 2 = Math.sin(fov / 2) * z;
@@ -237,8 +236,6 @@ function initWebGl() {
   initPostprocessing();
 
   requestAnimationFrame(drawWebGl);
-
-  window.plane = plane;
 }
 
 function initPostprocessing() {
@@ -465,8 +462,6 @@ function handleCanvasTap(event) {
   } else {
     click = {x: event.offsetX, y: event.offsetY};
   }
-
-  console.log('click', click);
 
   ripples.push({
     center: new THREE.Vector3(click.x, -click.y, 0),
