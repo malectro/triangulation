@@ -143,9 +143,19 @@ function drawAll() {
 }
 
 
-var scene;
-var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-var renderer = new THREE.WebGLRenderer();
+let scene;
+const fov = 45;
+const zPos = window.innerHeight / (Math.sin((fov / 2) * Math.PI / 180) * 2);
+const camera = new THREE.PerspectiveCamera(fov, window.innerWidth / window.innerHeight, 1, zPos + 100);
+camera.position.z = zPos;
+window.camera = camera;
+
+/*
+window.innerHeight / 2 = Math.sin(fov / 2) * z;
+z = (window.innerHeight / 2) / Math.sin(fov / 2);
+*/
+
+const renderer = new THREE.WebGLRenderer();
 
 //renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -197,7 +207,11 @@ function initWebGl() {
   planeGeometry.computeFaceNormals();
 
   //var material = new THREE.MeshBasicMaterial({color: 0xffffff, side: THREE.DoubleSide, vertexColors: THREE.FaceColors});
-  var material = new THREE.MeshLambertMaterial({color: 0xffffff, side: THREE.DoubleSide, vertexColors: THREE.FaceColors});
+  var material = new THREE.MeshLambertMaterial({
+    color: 0xffffff,
+    side: THREE.DoubleSide,
+    vertexColors: THREE.FaceColors,
+  });
   var materials = new THREE.MeshFaceMaterial([material]);
   plane = new THREE.Mesh(planeGeometry, material);
 
@@ -210,23 +224,21 @@ function initWebGl() {
   var light = new THREE.AmbientLight(0x404040); // soft white light
   scene.add(light);
 
-  var directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+  var directionalLight = new THREE.DirectionalLight(0xffffff, 0.2);
   directionalLight.position.set(1, 1, 1).normalize();
   scene.add(directionalLight);
 
-  /*
-  var pointLight = new THREE.PointLight( 0xff0000, 1, 0 );
-  pointLight.position.set( 50, 50, 600 );
-  scene.add( pointLight );
-  */
+  var pointLight = new THREE.PointLight(0xffffff, 1, 0);
+  pointLight.position.set(50, 50, 600);
+  scene.add(pointLight);
 
   scene.add(planeScene);
-
-  camera.position.z = 500;
 
   initPostprocessing();
 
   requestAnimationFrame(drawWebGl);
+
+  window.plane = plane;
 }
 
 function initPostprocessing() {
@@ -292,6 +304,7 @@ function drawWebGl(time) {
 
     ripple.magnitude *= ripple.decay;
   }
+
   ripples = _.filter(ripples, function (ripple) {
     return ripple.magnitude > 0.01;
   });
@@ -453,13 +466,15 @@ function handleCanvasTap(event) {
     click = {x: event.offsetX, y: event.offsetY};
   }
 
+  console.log('click', click);
+
   ripples.push({
     center: new THREE.Vector3(click.x, -click.y, 0),
     magnitude: 1,
     decay: 0.999,
     speed: 0.1,
     radius: 0,
-    start: new Date() - 0,
+    start: Date.now(),
   });
 
   var rand = Math.floor(Math.random() * audio.bufferArray.length);
