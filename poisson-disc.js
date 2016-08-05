@@ -219,11 +219,28 @@ function initWebGl() {
   planeGeometry.computeFaceNormals();
 
   //var material = new THREE.MeshBasicMaterial({color: 0xffffff, side: THREE.DoubleSide, vertexColors: THREE.FaceColors});
-  var material = new THREE.MeshLambertMaterial({
+  /*
+  const material = new THREE.MeshLambertMaterial({
     color: 0xffffff,
     vertexColors: THREE.FaceColors,
   });
-  var materials = new THREE.MeshFaceMaterial([material]);
+  */
+
+  const material = new THREE.ShaderMaterial({
+    defines: {
+      'STANDARD': '',
+    },
+    uniforms: THREE.RippleShader.uniforms,
+    //vertexShader: THREE.RippleShader.vertex,
+    vertexShader: THREE.RippleShader.vertex,
+    //fragmentShader: THREE.RippleShader.fragment,
+    fragmentShader: THREE.ShaderLib['standard'].fragmentShader,
+    lights: true,
+    fog: false,
+  });
+  //material.uniforms.ambientLightColor.value = [255, 255, 1];
+  //window.material = material;
+  const materials = new THREE.MeshFaceMaterial([material]);
   plane = new THREE.Mesh(planeGeometry, material);
 
   planeScene = new THREE.Scene();
