@@ -60,15 +60,6 @@ void main() {
 	#include <uv_vertex>
 	#include <uv2_vertex>
 	#include <color_vertex>
-	#include <beginnormal_vertex>
-	#include <morphnormal_vertex>
-	#include <skinbase_vertex>
-	#include <skinnormal_vertex>
-	#include <defaultnormal_vertex>
-#ifndef FLAT_SHADED
-	vNormal = normalize( transformedNormal );
-#endif
-	#include <begin_vertex>
 
   Ripple ripple;
   float z = 0.0;
@@ -84,8 +75,17 @@ void main() {
       }
     }
   }
+  vColor.z = z;
 
-  transformed.z = 1;
+	#include <beginnormal_vertex>
+	#include <morphnormal_vertex>
+	#include <skinbase_vertex>
+	#include <skinnormal_vertex>
+	#include <defaultnormal_vertex>
+#ifndef FLAT_SHADED
+	vNormal = normalize( transformedNormal );
+#endif
+	#include <begin_vertex>
 
   #include <displacementmap_vertex>
 	#include <morphtarget_vertex>
