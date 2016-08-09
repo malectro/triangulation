@@ -62,7 +62,7 @@ void main() {
 	#include <color_vertex>
 
   Ripple ripple;
-  float z = 0.0;
+  vec3 rColor = vec3(0.0, 0.0, 0.0);
   for (int i = 0; i < MAX_RIPPLES; i++) {
     if (i < rippleLength) {
       ripple = ripples[i];
@@ -70,12 +70,13 @@ void main() {
       if (dist < ripple.radius) {
         float rippleTime = time - ripple.start;
         float radiansPerDistance = (rippleTime - dist / ripple.speed) / SECONDS_PER_CYCLE;
-        z += cos(radiansPerDistance * M_2_PI) * 10.0 * ripple.magnitude;
-        // vertex.z += Math.cos(radiansPerDistance * Math.PI * 2) * 10 * ripple.magnitude;
+        rColor.x += sin(radiansPerDistance * PI) * ripple.magnitude;
+        rColor.y += sin(radiansPerDistance * M_2_PI) * ripple.magnitude;
+        rColor.z += cos(radiansPerDistance * M_2_PI) * ripple.magnitude;
       }
     }
   }
-  vColor.z = z;
+  vColor.xyz = rColor.xyz;
 
 	#include <beginnormal_vertex>
 	#include <morphnormal_vertex>
