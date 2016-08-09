@@ -1,6 +1,24 @@
 THREE.RippleShader = {
   get uniforms() {
-    return THREE.UniformsUtils.clone(THREE.ShaderLib['standard'].uniforms);
+    return Object.assign(THREE.UniformsUtils.clone(THREE.ShaderLib['standard'].uniforms), {
+      'ripples': {
+        properties: {
+          center: {},
+          magnitude: {},
+          decay: {},
+          speed: {},
+          radius: {},
+          start: {},
+        },
+        value: [],
+      },
+      'rippleLength': {
+        values: 0,
+      },
+      'time': {
+        value: 0,
+      },
+    });
   },
 
   vertex: `
@@ -20,6 +38,24 @@ varying vec3 vViewPosition;
 #include <specularmap_pars_fragment>
 #include <logdepthbuf_pars_vertex>
 #include <clipping_planes_pars_vertex>
+
+#define M_2_PI 6.283185307179586
+#define MAX_RIPPLES 20
+#define SECONDS_PER_CYCLE 2000.0;
+
+struct Ripple {
+  vec3 center;
+  float magnitude;
+  float decay;
+  float speed;
+  float radius;
+  float start;
+};
+
+uniform float time;
+uniform Ripple ripples[MAX_RIPPLES];
+uniform int rippleLength;
+
 void main() {
 	#include <uv_vertex>
 	#include <uv2_vertex>
@@ -33,10 +69,28 @@ void main() {
 	vNormal = normalize( transformedNormal );
 #endif
 	#include <begin_vertex>
-	#include <displacementmap_vertex>
+
+  Ripple ripple;
+  float z = 0.0;
+  for (int i = 0; i < MAX_RIPPLES; i++) {
+    if (i < rippleLength) {
+      ripple = ripples[i];
+      float dist = distance(ripple.center, position);
+      if (dist < ripple.radius) {
+        float rippleTime = time - ripple.start;
+        float radiansPerDistance = (rippleTime - dist / ripple.speed) / SECONDS_PER_CYCLE;
+        z += cos(radiansPerDistance * M_2_PI) * 10.0 * ripple.magnitude;
+        // vertex.z += Math.cos(radiansPerDistance * Math.PI * 2) * 10 * ripple.magnitude;
+      }
+    }
+  }
+
+  transformed.z = 1;
+
+  #include <displacementmap_vertex>
 	#include <morphtarget_vertex>
 	#include <skinning_vertex>
-	#include <project_vertex>
+  #include <project_vertex>
 	#include <logdepthbuf_vertex>
 	#include <clipping_planes_vertex>
 	vViewPosition = - mvPosition.xyz;
