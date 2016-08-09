@@ -230,6 +230,7 @@ function initWebGl() {
   material = new THREE.ShaderMaterial({
     defines: {
       'STANDARD': '',
+      'USE_COLOR': '',
     },
     uniforms: THREE.RippleShader.uniforms,
     //vertexShader: THREE.RippleShader.vertex,
