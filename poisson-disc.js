@@ -571,7 +571,7 @@ function handleCanvasTap(event) {
       magnitude: 1,
       start: currentTime,
       // might not need rest
-      decay: 0.999,
+      decay: 0.995,
       speed: 0.1,
       radius: 0,
     });
