@@ -372,7 +372,7 @@ function drawWebGl(time) {
   }
   */
 
-  for (i = 0; i < 0; i++) {
+  for (i = 0; i < rippleLength; i++) {
     ripple = ripples[i];
     rippleTime = time - ripple.start;
     ripple.radius = ripple.speed * rippleTime;
@@ -381,7 +381,7 @@ function drawWebGl(time) {
       vertex = plane.geometry.vertices[j];
       distance = vertex.distanceTo(ripple.center);
       if (distance < ripple.radius) {
-        radiansPerDistance = (rippleTime - vertex.distanceTo(ripple.center) / ripple.speed) / secondsPerCycle;
+        radiansPerDistance = (rippleTime - distance / ripple.speed) / secondsPerCycle;
         vertex.z += Math.cos(radiansPerDistance * Math.PI * 2) * 10 * ripple.magnitude;
       }
     }
