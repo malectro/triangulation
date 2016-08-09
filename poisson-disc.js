@@ -184,6 +184,7 @@ var plane;
 let depthMaterial;
 let depthRenderTarget;
 let effectComposer;
+let material;
 
 function initWebGl() {
   if (!points.length) {
@@ -226,7 +227,7 @@ function initWebGl() {
   });
   */
 
-  const material = new THREE.ShaderMaterial({
+  material = new THREE.ShaderMaterial({
     defines: {
       'STANDARD': '',
     },
@@ -240,7 +241,7 @@ function initWebGl() {
   });
   //material.uniforms.ambientLightColor.value = [255, 255, 1];
   //window.material = material;
-  const materials = new THREE.MeshFaceMaterial([material]);
+  //const materials = new THREE.MeshFaceMaterial([material]);
   plane = new THREE.Mesh(planeGeometry, material);
 
   planeScene = new THREE.Scene();
@@ -330,11 +331,32 @@ function initPostprocessing2() {
   effectComposer.addPass(effect);
 }
 
-var ripples = [];
+const defaultRipple = {
+  center: new THREE.Vector3(0, 0, 0),
+  magnitude: 0,
+  decay: 0.999,
+  speed: 0.1,
+  radius: 0,
+  start: 0,
+};
+const MAX_RIPPLES = 20;
+let rippleLength = 0;
+const ripples = [];
+for (let i = 0; i < MAX_RIPPLES; i++) {
+  ripples[i] = Object.assign({}, defaultRipple);
+}
+
+let currentTime = 0;
 function drawWebGl(time) {
   requestAnimationFrame(drawWebGl);
 
-  var currentTime = new Date();
+  currentTime = time;
+
+  const {uniforms} = material;
+
+  uniforms.time.value = currentTime;
+  uniforms.ripples.value = ripples;
+  uniforms.rippleLength.value = ripples.length;
 
   var frequency = 2 * 1000;
   var secondsPerCycle = 2000;
@@ -342,14 +364,16 @@ function drawWebGl(time) {
   var radiansPerDistance;
   var ripple, vertex, distance, rippleTime;
 
+  /*
   for (var i = 0; i < plane.geometry.vertices.length; i++) {
     vertex = plane.geometry.vertices[i];
     vertex.z = 0;
   }
+  */
 
-  for (i = 0; i < ripples.length; i++) {
+  for (i = 0; i < 0; i++) {
     ripple = ripples[i];
-    rippleTime = currentTime - ripple.start;
+    rippleTime = time - ripple.start;
     ripple.radius = ripple.speed * rippleTime;
 
     for (var j = 0; j < plane.geometry.vertices.length; j++) {
@@ -364,9 +388,24 @@ function drawWebGl(time) {
     ripple.magnitude *= ripple.decay;
   }
 
-  ripples = _.filter(ripples, function (ripple) {
-    return ripple.magnitude > 0.01;
-  });
+  for (let i = 0; i < rippleLength;) {
+    const ripple = ripples[i];
+    const {magnitude} = ripple;
+
+    if (magnitude > 0 && magnitude < 0.01) {
+      ripples.splice(i, 1);
+      ripples.push(ripple);
+      rippleLength--;
+    } else {
+      const {start, speed, decay} = ripple;
+      const rippleTime = time - start;
+
+      ripple.radius = speed * rippleTime;
+      ripple.magnitude *= decay;
+
+      i++;
+    }
+  }
 
   plane.geometry.verticesNeedUpdate = true;
   plane.geometry.normalsNeedUpdate = true;
@@ -525,14 +564,18 @@ function handleCanvasTap(event) {
     click = {x: event.offsetX, y: event.offsetY};
   }
 
-  ripples.push({
-    center: new THREE.Vector3(click.x, -click.y, 0),
-    magnitude: 1,
-    decay: 0.999,
-    speed: 0.1,
-    radius: 0,
-    start: Date.now(),
-  });
+  if (rippleLength < MAX_RIPPLES) {
+    Object.assign(ripples[rippleLength], {
+      center: new THREE.Vector3(click.x, -click.y, 0),
+      magnitude: 1,
+      start: currentTime,
+      // might not need rest
+      decay: 0.999,
+      speed: 0.1,
+      radius: 0,
+    });
+    rippleLength++;
+  }
 
   var rand = Math.floor(Math.random() * audio.bufferArray.length);
   var sampler = audio.ctx.createBufferSource();
