@@ -359,7 +359,7 @@ function drawWebGl(time) {
 
   uniforms.time.value = currentTime;
   uniforms.ripples.value = ripples;
-  uniforms.rippleLength.value = ripples.length;
+  uniforms.rippleLength.value = rippleLength;
 
   var frequency = 2 * 1000;
   var secondsPerCycle = 2000;
@@ -367,28 +367,8 @@ function drawWebGl(time) {
   var radiansPerDistance;
   var ripple, vertex, distance, rippleTime;
 
-  /*
-  for (var i = 0; i < plane.geometry.vertices.length; i++) {
-    vertex = plane.geometry.vertices[i];
+  for (let vertex of plane.geometry.vertices) {
     vertex.z = 0;
-  }
-  */
-
-  for (i = 0; i < rippleLength; i++) {
-    ripple = ripples[i];
-    rippleTime = time - ripple.start;
-    ripple.radius = ripple.speed * rippleTime;
-
-    for (var j = 0; j < plane.geometry.vertices.length; j++) {
-      vertex = plane.geometry.vertices[j];
-      distance = vertex.distanceTo(ripple.center);
-      if (distance < ripple.radius) {
-        radiansPerDistance = (rippleTime - distance / ripple.speed) / secondsPerCycle;
-        vertex.z += Math.cos(radiansPerDistance * Math.PI * 2) * 10 * ripple.magnitude;
-      }
-    }
-
-    ripple.magnitude *= ripple.decay;
   }
 
   for (let i = 0; i < rippleLength;) {
@@ -405,6 +385,15 @@ function drawWebGl(time) {
 
       ripple.radius = speed * rippleTime;
       ripple.magnitude *= decay;
+
+      for (let j = 0; j < plane.geometry.vertices.length; j++) {
+        vertex = plane.geometry.vertices[j];
+        distance = vertex.distanceTo(ripple.center);
+        if (distance < ripple.radius) {
+          radiansPerDistance = (rippleTime - distance / ripple.speed) / secondsPerCycle;
+          vertex.z += Math.cos(radiansPerDistance * Math.PI * 2) * 10 * ripple.magnitude;
+        }
+      }
 
       i++;
     }
@@ -573,7 +562,7 @@ async function handleCanvasTap(event) {
       magnitude: 1,
       start: currentTime,
       // might not need rest
-      decay: 0.995,
+      decay: 0.998,
       speed: 0.1,
       radius: 0,
     });

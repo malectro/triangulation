@@ -76,7 +76,7 @@ void main() {
       }
     }
   }
-  vColor.xyz += rColor.xyz;
+  vColor.xyz += (rColor.xyz * 0.5);
 
 	#include <beginnormal_vertex>
 	#include <morphnormal_vertex>
