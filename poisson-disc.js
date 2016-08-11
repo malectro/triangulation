@@ -557,7 +557,8 @@ run();
 async function handleCanvasTap(event) {
   event.preventDefault();
 
-  var click;
+  let touch;
+  let click;
   if (event.touches) {
     touch = event.changedTouches[0];
     click = {x: touch.pageX, y: touch.pageY};
@@ -621,6 +622,7 @@ canvas.addEventListener('click', handleCanvasTap);
 var audio;
 
 (function () {
+  var AudioContext = window.AudioContext || window.webkitAudioContext;
   var ctx = new AudioContext();
 
   var masterGain = ctx.createGain();
