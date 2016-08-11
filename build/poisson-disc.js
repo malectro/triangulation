@@ -1,3 +1,5 @@
+'use strict';
+
 var currentImage = new Image();
 currentImage.src = 'hubble.jpg';
 currentImage.addEventListener('load', function () {
@@ -11,7 +13,7 @@ canvas1.style.zIndex = 2;
 document.body.appendChild(canvas1);
 var ctx1 = canvas1.getContext('2d');
 
-const defaultColor = makeColor(200, 200, 200);
+var defaultColor = makeColor(200, 200, 200);
 
 function drawImg(img) {
   ctx1.clearRect(0, 0, canvas1.width, canvas1.height);
@@ -25,8 +27,8 @@ function drawImg(img) {
     poly = polygons[i];
     ps = poly.points;
     poly.c = {
-      x: (points[ps[0]].x + points[ps[1]].x + points[ps[2]].x) / 3,
-      y: (points[ps[0]].y + points[ps[1]].y + points[ps[2]].y) / 3,
+      x: (ps[0].x + ps[1].x + ps[2].x) / 3,
+      y: (ps[0].y + ps[1].y + ps[2].y) / 3
     };
     //poly.color = colorForPoint(imgData.data, poly.c);
     poly.color = defaultColor;
@@ -40,11 +42,11 @@ function drawImg(img) {
 
 function makeColor(r, g, b) {
   return {
-    r,
-    g,
-    b,
+    r: r,
+    g: g,
+    b: b,
     toString: colorToString,
-    toHexNumber: colorToHexNumber,
+    toHexNumber: colorToHexNumber
   };
 }
 
@@ -55,7 +57,7 @@ function colorForPoint(imgData, p) {
     g: imgData[index + 1],
     b: imgData[index + 2],
     toString: colorToString,
-    toHexNumber: colorToHexNumber,
+    toHexNumber: colorToHexNumber
   };
 }
 
@@ -69,30 +71,29 @@ document.body.appendChild(canvas);
 var ctx = canvas.getContext('2d');
 ctx.fillStyle = 'black';
 
-
 // the algorithm
-const PI2 = Math.PI * 2;
+var PI2 = Math.PI * 2;
 var RADIUS = 10;
 var RADIUS2 = RADIUS * 2;
 var CANDIDATES = 10;
-const INTERVAL = 20;
+var INTERVAL = 20;
 
 var polygons = [];
 var points = [];
 var active = [];
 var quadtree;
 
-let useSsao = true;
+var useSsao = true;
 
 function randomColor(variation, base) {
   variation = variation || 10;
-  base = base || {r: 120, g: 120, b: 120};
+  base = base || { r: 120, g: 120, b: 120 };
   var half = variation / 2;
   var color = {
     r: Math.round(Math.random() * variation - half + base.r),
     g: Math.round(Math.random() * variation - half + base.g),
     b: Math.round(Math.random() * variation - half + base.b),
-    toString: colorToString,
+    toString: colorToString
   };
   return color;
 }
@@ -111,11 +112,9 @@ function drawAll() {
   /*
   for (i = 0; i < points.length; i++) {
     point = points[i];
-
-    vx = point.vx * 0.2;
+     vx = point.vx * 0.2;
     vy = point.vy * 0.2;
-
-    if (vx + vy > 0) {
+     if (vx + vy > 0) {
       for (j = 0; j < point.polygons.length; j++) {
         poly = point.polygons[j];
         for (k = 0; k < poly.points.length; k++) {
@@ -126,8 +125,7 @@ function drawAll() {
       }
     }
   }
-
-  for (i = 0; i < points.length; i++) {
+   for (i = 0; i < points.length; i++) {
     point = points[i];
     point.x += point.vx;
     point.y += point.vy;
@@ -155,11 +153,10 @@ function drawAll() {
   requestAnimationFrame(drawAll);
 }
 
-
-let scene;
-const fov = 45;
-const zPos = window.innerHeight / (Math.sin((fov / 2) * Math.PI / 180) * 2);
-const camera = new THREE.PerspectiveCamera(fov, window.innerWidth / window.innerHeight, 1, zPos + 100);
+var scene = void 0;
+var fov = 45;
+var zPos = window.innerHeight / (Math.sin(fov / 2 * Math.PI / 180) * 2);
+var camera = new THREE.PerspectiveCamera(fov, window.innerWidth / window.innerHeight, 1, zPos + 100);
 camera.position.z = zPos * 0.9;
 
 /*
@@ -167,7 +164,7 @@ window.innerHeight / 2 = Math.sin(fov / 2) * z;
 z = (window.innerHeight / 2) / Math.sin(fov / 2);
 */
 
-const renderer = new THREE.WebGLRenderer();
+var renderer = new THREE.WebGLRenderer();
 
 //renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -181,10 +178,10 @@ canvas = renderer.domElement;
 var webGlPoints = [];
 var plane;
 
-let depthMaterial;
-let depthRenderTarget;
-let effectComposer;
-let material;
+var depthMaterial = void 0;
+var depthRenderTarget = void 0;
+var effectComposer = void 0;
+var material = void 0;
 
 function initWebGl() {
   if (!points.length) {
@@ -192,7 +189,6 @@ function initWebGl() {
   }
 
   var point, poly, idx;
-  /*
   for (var i = 0; i < points.length; i++) {
     point = points[i];
     for (var j = 0; j < point.polygons.length; j++) {
@@ -204,7 +200,6 @@ function initWebGl() {
       poly.pointIndices[idx] = i;
     }
   }
-  */
 
   var normal, color;
   var planeGeometry = new THREE.Geometry();
@@ -216,7 +211,7 @@ function initWebGl() {
     poly = polygons[i];
     color = new THREE.Color(poly.color.toHexNumber());
     normal = new THREE.Vector3(0, 0, 1);
-    planeGeometry.faces.push(new THREE.Face3(poly.points[2], poly.points[1], poly.points[0], normal, color, 0));
+    planeGeometry.faces.push(new THREE.Face3(poly.pointIndices[2], poly.pointIndices[1], poly.pointIndices[0], normal, color, 0));
   }
 
   planeGeometry.computeFaceNormals();
@@ -232,7 +227,7 @@ function initWebGl() {
   material = new THREE.ShaderMaterial({
     defines: {
       'STANDARD': '',
-      'USE_COLOR': '',
+      'USE_COLOR': ''
     },
     uniforms: THREE.RippleShader.uniforms,
     //vertexShader: THREE.RippleShader.vertex,
@@ -240,14 +235,14 @@ function initWebGl() {
     //fragmentShader: THREE.RippleShader.fragment,
     fragmentShader: THREE.ShaderLib['standard'].fragmentShader,
     lights: true,
-    fog: false,
+    fog: false
   });
   //material.uniforms.ambientLightColor.value = [255, 255, 1];
   //window.material = material;
   //const materials = new THREE.MeshFaceMaterial([material]);
   plane = new THREE.Mesh(planeGeometry, material);
 
-  const planeScene = new THREE.Scene();
+  var planeScene = new THREE.Scene();
   planeScene.position.y += canvas.height / 2;
   planeScene.position.x -= canvas.width / 2;
   planeScene.add(plane);
@@ -272,7 +267,7 @@ function initWebGl() {
 }
 
 function initPostprocessing() {
-  const renderPass = new THREE.RenderPass(scene, camera);
+  var renderPass = new THREE.RenderPass(scene, camera);
 
   depthMaterial = new THREE.MeshDepthMaterial();
   depthMaterial.depthPacking = THREE.RGBADepthPacking;
@@ -280,13 +275,13 @@ function initPostprocessing() {
 
   depthRenderTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, {
     minFilter: THREE.LinearFilter,
-    magFilter: THREE.LinearFilter,
+    magFilter: THREE.LinearFilter
   });
 
-  const ssaoPass = new THREE.ShaderPass(THREE.SSAOShader);
+  var ssaoPass = new THREE.ShaderPass(THREE.SSAOShader);
   ssaoPass.renderToScreen = true;
 
-  const uniforms = ssaoPass.uniforms;
+  var uniforms = ssaoPass.uniforms;
   uniforms['tDepth'].value = depthRenderTarget.texture;
   uniforms['size'].value.set(window.innerWidth, window.innerHeight);
   uniforms['cameraNear'].value = camera.near;
@@ -303,14 +298,14 @@ function initPostprocessing() {
 
 function initPostprocessing2() {
   // depth
-  let depthShader = THREE.ShaderLib['distanceRGBA'];
+  var depthShader = THREE.ShaderLib['distanceRGBA'];
   //depthShader = THREE.ShaderLib['depth'];
-  const depthUniforms = THREE.UniformsUtils.clone(depthShader.uniforms);
+  var depthUniforms = THREE.UniformsUtils.clone(depthShader.uniforms);
 
   depthMaterial = new THREE.ShaderMaterial({
     fragmentShader: depthShader.fragmentShader,
     vertexShader: depthShader.vertexShader,
-    uniforms: depthUniforms,
+    uniforms: depthUniforms
   });
   depthMaterial.blending = THREE.NoBlending;
 
@@ -321,10 +316,10 @@ function initPostprocessing2() {
   depthRenderTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, {
     minFilter: THREE.NearestFilter,
     magFilter: THREE.NearestFilter,
-    format: THREE.RGBAFormat,
+    format: THREE.RGBAFormat
   });
 
-  const effect = new THREE.ShaderPass(THREE.SSAOShader);
+  var effect = new THREE.ShaderPass(THREE.SSAOShader);
   effect.uniforms['tDepth'].value = depthRenderTarget;
   effect.uniforms['size'].value.set(window.innerWidth, window.innerHeight);
   effect.uniforms['cameraNear'].value = camera.near;
@@ -334,28 +329,30 @@ function initPostprocessing2() {
   effectComposer.addPass(effect);
 }
 
-const defaultRipple = {
+var defaultRipple = {
   center: new THREE.Vector3(0, 0, 0),
   magnitude: 0,
   decay: 0.999,
   speed: 0.1,
   radius: 0,
-  start: 0,
+  start: 0
 };
-const MAX_RIPPLES = 20;
-let rippleLength = 0;
-const ripples = [];
-for (let i = 0; i < MAX_RIPPLES; i++) {
+var MAX_RIPPLES = 20;
+var rippleLength = 0;
+var ripples = [];
+for (var i = 0; i < MAX_RIPPLES; i++) {
   ripples[i] = Object.assign({}, defaultRipple);
 }
 
-let currentTime = 0;
+var currentTime = 0;
 function drawWebGl(time) {
   requestAnimationFrame(drawWebGl);
 
   currentTime = time;
 
-  const {uniforms} = material;
+  var _material = material;
+  var uniforms = _material.uniforms;
+
 
   uniforms.time.value = currentTime;
   uniforms.ripples.value = ripples;
@@ -363,39 +360,64 @@ function drawWebGl(time) {
 
   var frequency = 2 * 1000;
   var secondsPerCycle = 2000;
-  var radiansPerCycle = (time / secondsPerCycle) * Math.PI * 2;
+  var radiansPerCycle = time / secondsPerCycle * Math.PI * 2;
   var radiansPerDistance;
   var ripple, vertex, distance, rippleTime;
 
-  for (let vertex of plane.geometry.vertices) {
-    vertex.z = 0;
+  var _iteratorNormalCompletion = true;
+  var _didIteratorError = false;
+  var _iteratorError = undefined;
+
+  try {
+    for (var _iterator = plane.geometry.vertices[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+      var _vertex = _step.value;
+
+      _vertex.z = 0;
+    }
+  } catch (err) {
+    _didIteratorError = true;
+    _iteratorError = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion && _iterator.return) {
+        _iterator.return();
+      }
+    } finally {
+      if (_didIteratorError) {
+        throw _iteratorError;
+      }
+    }
   }
 
-  for (let i = 0; i < rippleLength;) {
-    const ripple = ripples[i];
-    const {magnitude} = ripple;
+  for (var _i = 0; _i < rippleLength;) {
+    var _ripple = ripples[_i];
+    var magnitude = _ripple.magnitude;
+
 
     if (magnitude > 0 && magnitude < 0.01) {
-      ripples.splice(i, 1);
-      ripples.push(ripple);
+      ripples.splice(_i, 1);
+      ripples.push(_ripple);
       rippleLength--;
     } else {
-      const {start, speed, decay} = ripple;
-      const rippleTime = time - start;
+      var start = _ripple.start;
+      var speed = _ripple.speed;
+      var decay = _ripple.decay;
 
-      ripple.radius = speed * rippleTime;
-      ripple.magnitude *= decay;
+      var _rippleTime = time - start;
 
-      for (let j = 0; j < plane.geometry.vertices.length; j++) {
+      _ripple.radius = speed * _rippleTime;
+      _ripple.magnitude *= decay;
+
+      for (var j = 0; j < plane.geometry.vertices.length; j++) {
         vertex = plane.geometry.vertices[j];
-        distance = vertex.distanceTo(ripple.center);
-        if (distance < ripple.radius) {
-          radiansPerDistance = (rippleTime - distance / ripple.speed) / secondsPerCycle;
-          vertex.z += Math.cos(radiansPerDistance * Math.PI * 2) * 10 * ripple.magnitude;
+        distance = vertex.distanceTo(_ripple.center);
+        if (distance < _ripple.radius) {
+          radiansPerDistance = (_rippleTime - distance / _ripple.speed) / secondsPerCycle;
+          vertex.z += Math.cos(radiansPerDistance * Math.PI * 2) * 10 * _ripple.magnitude;
         }
       }
 
-      i++;
+      _i++;
     }
   }
 
@@ -417,7 +439,7 @@ function drawWebGl(time) {
 function run() {
   runButton.disabled = true;
 
-  var begin = (new Date()) - 0;
+  var begin = new Date() - 0;
   var poisson = new Worker('poisson-ptri.js');
 
   poisson.onmessage = function (event) {
@@ -427,7 +449,7 @@ function run() {
     if (currentImage.loaded) {
       drawImg(currentImage);
     }
-    console.log('poisson polytri took ms', (new Date()) - begin);
+    console.log('poisson polytri took ms', new Date() - begin);
     runButton.disabled = false;
   };
 
@@ -436,15 +458,12 @@ function run() {
   /*
   var begin = (new Date()) - 0;
   var poisson = new Worker('poisson.js');
-
-  poisson.onmessage = function (event) {
+   poisson.onmessage = function (event) {
     points = event.data[0];
     quadtree = event.data[1];
-
-    console.log('poisson took ms', (new Date()) - begin);
+     console.log('poisson took ms', (new Date()) - begin);
     begin = new Date() - 0;
-
-    var worker = new Worker('ptri.js');
+     var worker = new Worker('ptri.js');
     worker.onmessage = function (event) {
       polygons = event.data[0];
       points = event.data[1];
@@ -454,11 +473,9 @@ function run() {
       console.log('polytri took ms', (new Date()) - begin);
       runButton.disabled = false;
     };
-
-    worker.postMessage([points, {width: canvas.width, height: canvas.height}]);
+     worker.postMessage([points, {width: canvas.width, height: canvas.height}]);
   };
-
-  poisson.postMessage([RADIUS, CANDIDATES, canvas.width, canvas.height]);
+   poisson.postMessage([RADIUS, CANDIDATES, canvas.width, canvas.height]);
   */
 }
 
@@ -504,8 +521,8 @@ opacityInput.addEventListener('change', function () {
 });
 canvas.style.opacity = parseFloat(opacityInput.value, 10);
 
-const ssaoInput = document.getElementById('ssao');
-ssaoInput.addEventListener('change', () => {
+var ssaoInput = document.getElementById('ssao');
+ssaoInput.addEventListener('change', function () {
   useSsao = ssaoInput.checked;
 });
 useSsao = ssaoInput.checked;
@@ -545,15 +562,15 @@ canvas.addEventListener('mousemove', _.throttle(function (event) {
 
 run();
 
-async function handleCanvasTap(event) {
+function handleCanvasTap(event) {
   event.preventDefault();
 
   var click;
   if (event.touches) {
     touch = event.changedTouches[0];
-    click = {x: touch.pageX, y: touch.pageY};
+    click = { x: touch.pageX, y: touch.pageY };
   } else {
-    click = {x: event.offsetX, y: event.offsetY};
+    click = { x: event.offsetX, y: event.offsetY };
   }
 
   if (rippleLength < MAX_RIPPLES) {
@@ -564,16 +581,13 @@ async function handleCanvasTap(event) {
       // might not need rest
       decay: 0.998,
       speed: 0.1,
-      radius: 0,
+      radius: 0
     });
     rippleLength++;
   }
 
   var rand = Math.floor(Math.random() * audio.bufferArray.length);
-
-
-  await audio.ctx.resume();
-  const sampler = audio.ctx.createBufferSource();
+  var sampler = audio.ctx.createBufferSource();
   sampler.buffer = audio.bufferArray[rand];
   sampler.connect(audio.master);
 
@@ -584,8 +598,7 @@ async function handleCanvasTap(event) {
   var closest = bruteWithin(points, click, 100);
   console.log(closest);
   var start = new Date() - 0;
-
-  var bp = null;
+   var bp = null;
   var bd = Infinity;
   var dist;
   for (var p of points) {
@@ -595,18 +608,15 @@ async function handleCanvasTap(event) {
       bp = p;
     }
   }
-
-  console.log('brute force found point in ms', new Date() - start);
+   console.log('brute force found point in ms', new Date() - start);
   start = new Date() - 0;
-
-  quadtreeClosest(quadtree, click);
+   quadtreeClosest(quadtree, click);
   console.log('quadtree found point in ms', new Date() - start);
   */
 }
 
 canvas.addEventListener('touchstart', handleCanvasTap);
 canvas.addEventListener('click', handleCanvasTap);
-
 
 // audio
 var audio;
@@ -621,13 +631,7 @@ var audio;
   var master = ctx.createDynamicsCompressor();
   master.connect(masterGain);
 
-  var srces = [
-    'pianos/b.wav',
-    'pianos/c-sharp.wav',
-    'pianos/e.wav',
-    'pianos/f-sharp.wav',
-    'pianos/g-sharp.wav',
-  ];
+  var srces = ['pianos/b.wav', 'pianos/c-sharp.wav', 'pianos/e.wav', 'pianos/f-sharp.wav', 'pianos/g-sharp.wav'];
   var buffers = {};
   var bufferArray = [];
   var count = srces.length;
@@ -652,10 +656,8 @@ var audio;
           loaded = true;
           console.log("Loaded all audio");
         }
-      }, function () {
-
-      });
-    }
+      }, function () {});
+    };
 
     request.send();
   });
@@ -665,7 +667,6 @@ var audio;
     masterGain: masterGain,
     master: master,
     bufferArray: bufferArray,
-    buffers: buffers,
+    buffers: buffers
   };
 })();
-
