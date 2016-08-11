@@ -1,3 +1,7 @@
+import _ from 'lodash-es';
+import 'src/ripple.shader';
+
+
 var currentImage = new Image();
 currentImage.src = 'hubble.jpg';
 currentImage.addEventListener('load', function () {
@@ -245,7 +249,7 @@ function initWebGl() {
   //const materials = new THREE.MeshFaceMaterial([material]);
   plane = new THREE.Mesh(planeGeometry, material);
 
-  planeScene = new THREE.Scene();
+  const planeScene = new THREE.Scene();
   planeScene.position.y += canvas.height / 2;
   planeScene.position.x -= canvas.width / 2;
   planeScene.add(plane);
@@ -416,7 +420,9 @@ function run() {
   runButton.disabled = true;
 
   var begin = (new Date()) - 0;
-  var poisson = new Worker('poisson-ptri.js');
+  var poisson = new Worker('src/poisson-ptri.js');
+
+  window.worker = poisson;
 
   poisson.onmessage = function (event) {
     polygons = event.data[0];
@@ -427,6 +433,10 @@ function run() {
     }
     console.log('poisson polytri took ms', (new Date()) - begin);
     runButton.disabled = false;
+  };
+
+  poisson.onerror = function (error) {
+    console.error('polytri error', error);
   };
 
   poisson.postMessage([RADIUS, CANDIDATES, canvas.width, canvas.height]);

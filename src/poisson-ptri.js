@@ -1,5 +1,5 @@
-importScripts('bower_components/poly2tri/dist/poly2tri.js');
-importScripts('bower_components/underscore/underscore.js');
+importScripts('/bower_components/poly2tri/dist/poly2tri.js');
+importScripts('/bower_components/underscore/underscore.js');
 importScripts('quadtree.js');
 
 const PI2 = Math.PI * 2;
