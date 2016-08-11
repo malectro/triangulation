@@ -84,6 +84,7 @@ var active = [];
 var quadtree;
 
 var useSsao = true;
+var showMesh = false;
 
 function randomColor(variation, base) {
   variation = variation || 10;
@@ -408,12 +409,14 @@ function drawWebGl(time) {
       _ripple.radius = speed * _rippleTime;
       _ripple.magnitude *= decay;
 
-      for (var j = 0; j < plane.geometry.vertices.length; j++) {
-        vertex = plane.geometry.vertices[j];
-        distance = vertex.distanceTo(_ripple.center);
-        if (distance < _ripple.radius) {
-          radiansPerDistance = (_rippleTime - distance / _ripple.speed) / secondsPerCycle;
-          vertex.z += Math.cos(radiansPerDistance * Math.PI * 2) * 10 * _ripple.magnitude;
+      if (showMesh) {
+        for (var j = 0; j < plane.geometry.vertices.length; j++) {
+          vertex = plane.geometry.vertices[j];
+          distance = vertex.distanceTo(_ripple.center);
+          if (distance < _ripple.radius) {
+            radiansPerDistance = (_rippleTime - distance / _ripple.speed) / secondsPerCycle;
+            vertex.z += Math.cos(radiansPerDistance * Math.PI * 2) * 10 * _ripple.magnitude;
+          }
         }
       }
 
@@ -520,6 +523,12 @@ opacityInput.addEventListener('change', function () {
   canvas.style.opacity = parseFloat(opacityInput.value, 10);
 });
 canvas.style.opacity = parseFloat(opacityInput.value, 10);
+
+var meshInput = document.getElementById('mesh');
+meshInput.addEventListener('change', function () {
+  showMesh = meshInput.checked;
+});
+showMesh = meshInput.checked;
 
 var ssaoInput = document.getElementById('ssao');
 ssaoInput.addEventListener('change', function () {

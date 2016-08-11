@@ -83,6 +83,7 @@ var active = [];
 var quadtree;
 
 let useSsao = true;
+let showMesh = false;
 
 function randomColor(variation, base) {
   variation = variation || 10;
@@ -386,12 +387,14 @@ function drawWebGl(time) {
       ripple.radius = speed * rippleTime;
       ripple.magnitude *= decay;
 
-      for (let j = 0; j < plane.geometry.vertices.length; j++) {
-        vertex = plane.geometry.vertices[j];
-        distance = vertex.distanceTo(ripple.center);
-        if (distance < ripple.radius) {
-          radiansPerDistance = (rippleTime - distance / ripple.speed) / secondsPerCycle;
-          vertex.z += Math.cos(radiansPerDistance * Math.PI * 2) * 10 * ripple.magnitude;
+      if (showMesh) {
+        for (let j = 0; j < plane.geometry.vertices.length; j++) {
+          vertex = plane.geometry.vertices[j];
+          distance = vertex.distanceTo(ripple.center);
+          if (distance < ripple.radius) {
+            radiansPerDistance = (rippleTime - distance / ripple.speed) / secondsPerCycle;
+            vertex.z += Math.cos(radiansPerDistance * Math.PI * 2) * 10 * ripple.magnitude;
+          }
         }
       }
 
@@ -503,6 +506,12 @@ opacityInput.addEventListener('change', function () {
   canvas.style.opacity = parseFloat(opacityInput.value, 10);
 });
 canvas.style.opacity = parseFloat(opacityInput.value, 10);
+
+const meshInput = document.getElementById('mesh');
+meshInput.addEventListener('change', function () {
+  showMesh = meshInput.checked;
+});
+showMesh = meshInput.checked;
 
 const ssaoInput = document.getElementById('ssao');
 ssaoInput.addEventListener('change', () => {
