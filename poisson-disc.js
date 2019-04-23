@@ -25,8 +25,8 @@ function drawImg(img) {
     poly = polygons[i];
     ps = poly.points;
     poly.c = {
-      x: (ps[0].x + ps[1].x + ps[2].x) / 3,
-      y: (ps[0].y + ps[1].y + ps[2].y) / 3,
+      x: (points[ps[0]].x + points[ps[1]].x + points[ps[2]].x) / 3,
+      y: (points[ps[0]].y + points[ps[1]].y + points[ps[2]].y) / 3,
     };
     //poly.color = colorForPoint(imgData.data, poly.c);
     poly.color = defaultColor;
@@ -191,6 +191,7 @@ function initWebGl() {
   }
 
   var point, poly, idx;
+  /*
   for (var i = 0; i < points.length; i++) {
     point = points[i];
     for (var j = 0; j < point.polygons.length; j++) {
@@ -202,6 +203,7 @@ function initWebGl() {
       poly.pointIndices[idx] = i;
     }
   }
+  */
 
   var normal, color;
   var planeGeometry = new THREE.Geometry();
@@ -213,7 +215,7 @@ function initWebGl() {
     poly = polygons[i];
     color = new THREE.Color(poly.color.toHexNumber());
     normal = new THREE.Vector3(0, 0, 1);
-    planeGeometry.faces.push(new THREE.Face3(poly.pointIndices[2], poly.pointIndices[1], poly.pointIndices[0], normal, color, 0));
+    planeGeometry.faces.push(new THREE.Face3(poly.points[2], poly.points[1], poly.points[0], normal, color, 0));
   }
 
   planeGeometry.computeFaceNormals();

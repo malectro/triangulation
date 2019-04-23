@@ -1,5 +1,5 @@
-importScripts('bower_components/poly2tri/dist/poly2tri.js');
-importScripts('bower_components/underscore/underscore.js');
+importScripts('http://r3mi.github.io/poly2tri.js/dist/poly2tri.js');
+importScripts('https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.11/lodash.min.js');
 importScripts('quadtree.js');
 
 const PI2 = Math.PI * 2;
@@ -23,6 +23,7 @@ function poisson() {
     y: Math.random() * HEIGHT,
     vx: 0,
     vy: 0,
+    i: 0,
   };
   points.push(point);
   active.push(point);
@@ -43,6 +44,7 @@ function poisson() {
         y: current.y - Math.sin(angle) * far,
         vx: 0,
         vy: 0,
+        i: points.length,
       };
       var good = true;
 
@@ -82,7 +84,10 @@ function ptri(pointList, canvas) {
     new poly2tri.Point(canvas.width, canvas.height),
     new poly2tri.Point(0, canvas.height)
     */
-  ];
+  ].map((point, index) => ({
+    ...point,
+    i: index + pointList.length,
+  }));
   var swctx = new poly2tri.SweepContext(contour);
 
   // use original points
@@ -97,9 +102,11 @@ function ptri(pointList, canvas) {
 
   polygons = [];
   for (var tri of triangles) {
-    polygons.push({points: tri.getPoints()});
+    polygons.push({points: tri.getPoints().map(point => point.i)});
   }
 
+  // LOL, this was a circular reference
+    /*
   for (var poly of polygons) {
     for (var point of poly.points) {
       if (!point.polygons) {
@@ -108,8 +115,9 @@ function ptri(pointList, canvas) {
       point.polygons.push(poly);
     }
   }
+  */
 
-  return [polygons, contour.concat(pointList), poly];
+  return [polygons, [...pointList, ...contour]];
 }
 
 self.onmessage = function (event) {
@@ -119,10 +127,10 @@ self.onmessage = function (event) {
   HEIGHT = event.data[3];
 
   poisson();
-  var results = ptri(points, {width: WIDTH, height: HEIGHT});
+  const [polygons, pointList] = ptri(points, {width: WIDTH, height: HEIGHT});
 
   //console.log('hi', results);
-  postMessage([results[0], results[1], quadtree]);
+  postMessage([polygons, pointList, quadtree]);
 
   self.close();
 };

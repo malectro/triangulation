@@ -6,6 +6,7 @@
   "dependencies": {
     "bower": "^1.7.7",
     "express": "4.x",
+    "prettier": "^1.17.0",
     "three": "^0.79.0"
   },
   "engines": {
