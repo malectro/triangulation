@@ -499,7 +499,7 @@ canvas.addEventListener('mousemove', _.throttle(function (event) {
 
 run();
 
-function handleCanvasTap(event) {
+async function handleCanvasTap(event) {
   event.preventDefault();
 
   var click;
@@ -520,7 +520,10 @@ function handleCanvasTap(event) {
   });
 
   var rand = Math.floor(Math.random() * audio.bufferArray.length);
-  var sampler = audio.ctx.createBufferSource();
+
+
+  await audio.ctx.resume();
+  const sampler = audio.ctx.createBufferSource();
   sampler.buffer = audio.bufferArray[rand];
   sampler.connect(audio.master);
 
