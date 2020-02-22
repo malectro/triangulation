@@ -1,4 +1,4 @@
-importScripts('http://r3mi.github.io/poly2tri.js/dist/poly2tri.js');
+importScripts('https://r3mi.github.io/poly2tri.js/dist/poly2tri.js');
 importScripts('https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.11/lodash.min.js');
 importScripts('quadtree.js');
 

@@ -27,8 +27,8 @@ function drawImg(img) {
     poly = polygons[i];
     ps = poly.points;
     poly.c = {
-      x: (ps[0].x + ps[1].x + ps[2].x) / 3,
-      y: (ps[0].y + ps[1].y + ps[2].y) / 3
+      x: (points[ps[0]].x + points[ps[1]].x + points[ps[2]].x) / 3,
+      y: (points[ps[0]].y + points[ps[1]].y + points[ps[2]].y) / 3
     };
     //poly.color = colorForPoint(imgData.data, poly.c);
     poly.color = defaultColor;
@@ -190,6 +190,7 @@ function initWebGl() {
   }
 
   var point, poly, idx;
+  /*
   for (var i = 0; i < points.length; i++) {
     point = points[i];
     for (var j = 0; j < point.polygons.length; j++) {
@@ -201,6 +202,7 @@ function initWebGl() {
       poly.pointIndices[idx] = i;
     }
   }
+  */
 
   var normal, color;
   var planeGeometry = new THREE.Geometry();
@@ -212,7 +214,7 @@ function initWebGl() {
     poly = polygons[i];
     color = new THREE.Color(poly.color.toHexNumber());
     normal = new THREE.Vector3(0, 0, 1);
-    planeGeometry.faces.push(new THREE.Face3(poly.pointIndices[2], poly.pointIndices[1], poly.pointIndices[0], normal, color, 0));
+    planeGeometry.faces.push(new THREE.Face3(poly.points[2], poly.points[1], poly.points[0], normal, color, 0));
   }
 
   planeGeometry.computeFaceNormals();
@@ -341,8 +343,8 @@ var defaultRipple = {
 var MAX_RIPPLES = 20;
 var rippleLength = 0;
 var ripples = [];
-for (var i = 0; i < MAX_RIPPLES; i++) {
-  ripples[i] = Object.assign({}, defaultRipple);
+for (var _i = 0; _i < MAX_RIPPLES; _i++) {
+  ripples[_i] = Object.assign({}, defaultRipple);
 }
 
 var currentTime = 0;
@@ -351,8 +353,8 @@ function drawWebGl(time) {
 
   currentTime = time;
 
-  var _material = material;
-  var uniforms = _material.uniforms;
+  var _material = material,
+      uniforms = _material.uniforms;
 
 
   uniforms.time.value = currentTime;
@@ -390,19 +392,19 @@ function drawWebGl(time) {
     }
   }
 
-  for (var _i = 0; _i < rippleLength;) {
-    var _ripple = ripples[_i];
+  for (var _i2 = 0; _i2 < rippleLength;) {
+    var _ripple = ripples[_i2];
     var magnitude = _ripple.magnitude;
 
 
     if (magnitude > 0 && magnitude < 0.01) {
-      ripples.splice(_i, 1);
+      ripples.splice(_i2, 1);
       ripples.push(_ripple);
       rippleLength--;
     } else {
-      var start = _ripple.start;
-      var speed = _ripple.speed;
-      var decay = _ripple.decay;
+      var start = _ripple.start,
+          speed = _ripple.speed,
+          decay = _ripple.decay;
 
       var _rippleTime = time - start;
 
@@ -420,7 +422,7 @@ function drawWebGl(time) {
         }
       }
 
-      _i++;
+      _i2++;
     }
   }
 
@@ -571,7 +573,7 @@ canvas.addEventListener('mousemove', _.throttle(function (event) {
 
 run();
 
-function handleCanvasTap(event) {
+async function handleCanvasTap(event) {
   event.preventDefault();
 
   var touch = void 0;
@@ -597,6 +599,8 @@ function handleCanvasTap(event) {
   }
 
   var rand = Math.floor(Math.random() * audio.bufferArray.length);
+
+  await audio.ctx.resume();
   var sampler = audio.ctx.createBufferSource();
   sampler.buffer = audio.bufferArray[rand];
   sampler.connect(audio.master);
