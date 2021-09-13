@@ -1,6 +1,5 @@
-importScripts('https://r3mi.github.io/poly2tri.js/dist/poly2tri.js');
-importScripts('https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.11/lodash.min.js');
-importScripts('quadtree.js');
+import {SweepContext} from 'poly2tri';
+import {quadtreeNew, quadtreeAdd, quadtreeFits} from './quadtree.js';
 
 const PI2 = Math.PI * 2;
 var RADIUS = 20;
@@ -12,7 +11,6 @@ var polygons = [];
 var points = [];
 var active = [];
 var quadtree;
-
 
 function poisson() {
   quadtree = quadtreeNew(0, 0, WIDTH, HEIGHT);
@@ -29,7 +27,7 @@ function poisson() {
   active.push(point);
   quadtreeAdd(quadtree, point);
 
-  while (active.length) {
+  while (active.length > 0) {
     // get a random active sample
     var randomIndex = Math.floor(Math.random() * active.length);
     var current = active[randomIndex];
@@ -49,11 +47,15 @@ function poisson() {
       var good = true;
 
       // check candidate
-      if (candidate.x > WIDTH || candidate.y > HEIGHT
-          || candidate.x < 0 || candidate.y < 0) {
-          good = false;
+      if (
+        candidate.x > WIDTH ||
+        candidate.y > HEIGHT ||
+        candidate.x < 0 ||
+        candidate.y < 0
+      ) {
+        good = false;
       } else {
-        good = quadtreeFits(quadtree, candidate);
+        good = quadtreeFits(quadtree, candidate, RADIUS);
       }
 
       if (good) {
@@ -88,7 +90,7 @@ function ptri(pointList, canvas) {
     ...point,
     i: index + pointList.length,
   }));
-  var swctx = new poly2tri.SweepContext(contour);
+  var swctx = new SweepContext(contour);
 
   // use original points
   /*
@@ -106,7 +108,7 @@ function ptri(pointList, canvas) {
   }
 
   // LOL, this was a circular reference
-    /*
+  /*
   for (var poly of polygons) {
     for (var point of poly.points) {
       if (!point.polygons) {
@@ -120,18 +122,20 @@ function ptri(pointList, canvas) {
   return [polygons, [...pointList, ...contour]];
 }
 
-self.onmessage = function (event) {
+self.onmessage = function(event) {
   RADIUS = event.data[0];
   CANDIDATES = event.data[1];
   WIDTH = event.data[2];
   HEIGHT = event.data[3];
 
+  console.log('ho', RADIUS, CANDIDATES, WIDTH, HEIGHT);
   poisson();
+  console.log('hey');
   const [polygons, pointList] = ptri(points, {width: WIDTH, height: HEIGHT});
+  console.log('what');
 
   //console.log('hi', results);
   postMessage([polygons, pointList, quadtree]);
 
   self.close();
 };
-

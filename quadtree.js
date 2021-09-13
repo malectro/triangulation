@@ -3,7 +3,7 @@ const QT_NE = 1;
 const QT_SW = 2;
 const QT_SE = 3;
 
-function quadtreeNew(x, y, width, height) {
+export function quadtreeNew(x, y, width, height) {
   return {
     x: x,
     y: y,
@@ -18,7 +18,7 @@ function quadtreeNew(x, y, width, height) {
   };
 }
 
-function quadtreeAddLoop(qt, point) {
+export function quadtreeAddLoop(qt, point) {
   var region;
 
   while (qt) {
@@ -38,7 +38,7 @@ function quadtreeAddLoop(qt, point) {
   }
 }
 
-function quadtreeAdd(qt, point) {
+export function quadtreeAdd(qt, point) {
   qt.count++;
 
   if (!qt.point) {
@@ -57,7 +57,7 @@ function quadtreeAdd(qt, point) {
   return qt.depth;
 }
 
-function quadtreeRegion(qt, point) {
+export function quadtreeRegion(qt, point) {
   var region;
   var x = point.x - qt.x;
   var y = point.y - qt.y;
@@ -77,7 +77,7 @@ function quadtreeRegion(qt, point) {
   return region;
 }
 
-function quadtreeClosest(qt, point) {
+export function quadtreeClosest(qt, point) {
   return quadtreeClosestRecurse(qt, point, {d: qt.width + qt.width, p: null}).p;
 }
 
@@ -107,7 +107,7 @@ function quadtreeClosestRecurse(qt, point, best) {
   return best;
 }
 
-function quadtreeIsWithin(qt, point, radius) {
+export function quadtreeIsWithin(qt, point, radius) {
   return quadtreeIsWithinRecurse(qt, point, radius, []);
 }
 
@@ -135,23 +135,23 @@ function quadtreeIsWithinRecurse(qt, point, radius, points) {
   return points;
 }
 
-function quadtreeFits(qt, point) {
-  if (point.x < qt.x - RADIUS || point.y < qt.y - RADIUS
-      || point.x > qt.x + qt.width + RADIUS || point.y > qt.y + qt.height + RADIUS) {
+export function quadtreeFits(qt, point, radius) {
+  if (point.x < qt.x - radius || point.y < qt.y - radius
+      || point.x > qt.x + qt.width + radius || point.y > qt.y + qt.height + radius) {
       return true;
   }
 
   if (qt.point) {
     var dist = distance(point, qt.point);
 
-    if (dist < RADIUS) {
+    if (dist < radius) {
       return false;
     }
   }
 
   for (var child of qt.regions) {
     if (child) {
-      if (!quadtreeFits(child, point)) {
+      if (!quadtreeFits(child, point, radius)) {
         return false;
       }
     }
