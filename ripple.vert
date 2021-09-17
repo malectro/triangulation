@@ -37,6 +37,18 @@ void main() {
 	#include <uv2_vertex>
 	#include <color_vertex>
 
+	#include <beginnormal_vertex>
+	#include <morphnormal_vertex>
+	#include <skinbase_vertex>
+	#include <skinnormal_vertex>
+	#include <defaultnormal_vertex>
+
+#ifndef FLAT_SHADED
+	vNormal = normalize( transformedNormal );
+#endif
+
+	#include <begin_vertex>
+
   Ripple ripple;
   vec3 rColor = vec3(0.0, 0.0, 0.0);
   for (int i = 0; i < MAX_RIPPLES; i++) {
@@ -49,28 +61,25 @@ void main() {
         rColor.x += sin(radiansPerDistance * PI) * ripple.magnitude;
         rColor.y += sin(radiansPerDistance * M_2_PI) * ripple.magnitude;
         rColor.z += cos(radiansPerDistance * M_2_PI) * ripple.magnitude;
+        transformed.z +=
+          cos(radiansPerDistance * M_2_PI) *
+          10.0 *
+          ripple.magnitude;
       }
     }
   }
-  vColor.xyz += (rColor.xyz * 0.5);
-
-	#include <beginnormal_vertex>
-	#include <morphnormal_vertex>
-	#include <skinbase_vertex>
-	#include <skinnormal_vertex>
-	#include <defaultnormal_vertex>
-#ifndef FLAT_SHADED
-	vNormal = normalize( transformedNormal );
-#endif
-	#include <begin_vertex>
+  //vColor.xyz += (rColor.xyz * 0.5);
+  vColor.xyz = color.xyz + (transformed.z / 40.0);
 
   #include <displacementmap_vertex>
 	#include <morphtarget_vertex>
 	#include <skinning_vertex>
-  #include <project_vertex>
+	#include <project_vertex>
 	#include <logdepthbuf_vertex>
 	#include <clipping_planes_vertex>
-	vViewPosition = - mvPosition.xyz;
+
+  vViewPosition = - mvPosition.xyz;
+
 	#include <worldpos_vertex>
 	#include <shadowmap_vertex>
 }

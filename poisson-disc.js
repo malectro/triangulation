@@ -260,14 +260,18 @@ function initWebGl() {
     lights: true,
     fog: false,
   });
+  //material.uniforms.color.value.set(0x000099);
   //material.uniforms.ambientLightColor.value = [255, 255, 1];
   //window.material = material;
   //const materials = new THREE.MeshFaceMaterial([material]);
   plane = new THREE.Mesh(planeGeometry, material);
 
+  material.uniforms.diffuse.value.set(0x4444aa);
+
   const planeScene = new THREE.Scene();
   planeScene.position.y += canvas.height / 2;
   planeScene.position.x -= canvas.width / 2;
+  planeScene.rotateX(-Math.PI / 4);
   planeScene.add(plane);
 
   scene = new THREE.Scene();
@@ -377,7 +381,6 @@ for (let i = 0; i < MAX_RIPPLES; i++) {
 
 let currentTime = 0;
 function drawWebGl(time) {
-  console.log('drawing');
   requestAnimationFrame(drawWebGl);
 
   currentTime = time;
@@ -413,6 +416,7 @@ function drawWebGl(time) {
       ripple.radius = speed * rippleTime;
       ripple.magnitude *= decay;
 
+      /*
       if (showMesh) {
         for (let j = 0; j < plane.geometry.vertices.length; j++) {
           vertex = plane.geometry.vertices[j];
@@ -427,14 +431,17 @@ function drawWebGl(time) {
           }
         }
       }
+      */
 
       i++;
     }
   }
 
+  /*
   plane.geometry.verticesNeedUpdate = true;
   plane.geometry.normalsNeedUpdate = true;
   plane.geometry.computeFaceNormals();
+  */
 
   if (useSsao) {
     scene.overrideMaterial = depthMaterial;
