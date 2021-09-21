@@ -266,7 +266,7 @@ function initWebGl() {
   //const materials = new THREE.MeshFaceMaterial([material]);
   plane = new THREE.Mesh(planeGeometry, material);
 
-  material.uniforms.diffuse.value.set(0x4444aa);
+  material.uniforms.diffuse.value.set(0x6666dd);
 
   const planeScene = new THREE.Scene();
   planeScene.position.y += canvas.height / 2;
@@ -282,9 +282,11 @@ function initWebGl() {
   directionalLight.position.set(1, 1, 1).normalize();
   scene.add(directionalLight);
 
+  /*
   var pointLight = new THREE.PointLight(0xffffff, 0.5, 0);
   pointLight.position.set(50, 50, 600);
   scene.add(pointLight);
+  */
 
   scene.add(planeScene);
 
