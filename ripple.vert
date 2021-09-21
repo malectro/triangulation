@@ -62,14 +62,14 @@ void main() {
         rColor.y += sin(radiansPerDistance * M_2_PI) * ripple.magnitude;
         rColor.z += cos(radiansPerDistance * M_2_PI) * ripple.magnitude;
         transformed.z +=
-          cos(radiansPerDistance * M_2_PI) *
-          10.0 *
+          sin(radiansPerDistance * M_2_PI) *
+          20.0 *
           ripple.magnitude;
       }
     }
   }
   //vColor.xyz += (rColor.xyz * 0.5);
-  vColor.xyz = color.xyz + (transformed.z / 40.0);
+  vColor.xyz = color.xyz + (transformed.z / 20.0);
 
   #include <displacementmap_vertex>
 	#include <morphtarget_vertex>
