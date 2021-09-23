@@ -1,3 +1,14 @@
+import * as THREE from 'three';
+
+import {RenderPass} from 'three/examples/jsm/postprocessing/RenderPass.js';
+import {ShaderPass} from 'three/examples/jsm/postprocessing/ShaderPass.js';
+import {EffectComposer} from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import {SSAOShader} from 'three/examples/jsm/shaders/SSAOShader.js';
+import {SSAOPass} from 'three/examples/jsm/postprocessing/SSAOPass.js';
+
+import {RippleShader} from './ripple.shader.js';
+
+
 const document = window.document;
 
 var currentImage = new Image();
@@ -85,7 +96,7 @@ var points = [];
 var active = [];
 var quadtree;
 
-let useSsao = true;
+let useSsao = false;
 let showMesh = false;
 
 function randomColor(variation, base) {
@@ -162,6 +173,7 @@ function drawAll() {
 let scene;
 const fov = 45;
 const zPos = window.innerHeight / (Math.sin(((fov / 2) * Math.PI) / 180) * 2);
+//const zPos = 1000;
 const camera = new THREE.PerspectiveCamera(
   fov,
   window.innerWidth / window.innerHeight,
@@ -215,14 +227,46 @@ function initWebGl() {
   }
   */
 
-  var normal, color;
-  var planeGeometry = new THREE.Geometry();
+  let planeGeometry = new THREE.BufferGeometry();
+
+  let normal, color;
+  let vertices = [];
+  let normals = [];
   for (i = 0; i < points.length; i++) {
     point = points[i];
-    planeGeometry.vertices.push(new THREE.Vector3(point.x, -point.y, 0));
+    //vertices.push(pointx, -point.y, 0);
+    //normals.push(0, 0, 1);
+    //planeGeometry.vertices.push(new THREE.Vector3(point.x, -point.y, 0));
   }
+  let colors = [];
+  let faces = [];
+  const halfHeight = canvas.height / 2;
+  const halfWidth = canvas.height / 2;
   for (i = 0; i < polygons.length; i++) {
     poly = polygons[i];
+    for (let j = 0; j < 3; j++) {
+      const point = points[poly.points[j]];
+      /*
+      vertices.push(
+        point.x - halfWidth, point.y - halfHeight, 0,
+      );
+      */
+      vertices.push(
+        point.x, point.y, 0,
+      );
+    }
+
+    const color = [poly.color.r / 255, poly.color.g / 255, poly.color.b / 255];
+    colors.push(
+      ...color, ...color, ...color,
+    );
+
+    normals.push(
+      0, 0, 1,
+      0, 0, 1,
+      0, 0, 1,
+    );
+    /*
     color = new THREE.Color(poly.color.toHexNumber());
     normal = new THREE.Vector3(0, 0, 1);
     planeGeometry.faces.push(
@@ -235,9 +279,51 @@ function initWebGl() {
         0,
       ),
     );
+    */
   }
 
-  planeGeometry.computeFaceNormals();
+  /*
+  console.log('min max',
+    points.reduce((min, p) => Math.min(p.y, min), Infinity),
+    points.reduce((max, p) => Math.max(p.y, max), -Infinity),
+  );
+  */
+
+  /*
+  vertices = [
+    -100, -100, 0,
+    100, 100, 0,
+    -100, 100, 0,
+
+    -100, -100, 0,
+    100, -100, 0,
+    100, 100, 0,
+  ];
+  normals = [
+    0, 0, 1,
+    0, 0, 1,
+    0, 0, 1,
+    0, 0, 1,
+    0, 0, 1,
+    0, 0, 1,
+  ],
+  colors = [
+    0, 0, 1,
+    0, 0, 1,
+    0, 0, 1,
+    0, 0, 1,
+    0, 0, 1,
+    0, 0, 1,
+  ]
+  */
+
+  planeGeometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+  planeGeometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+  planeGeometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+  //planeGeometry = new THREE.PlaneGeometry(200, 200, 100, 100);
+  //planeGeometry.computeBoundingSphere();
+  //planeGeometry.computeFaceNormals();
 
   //var material = new THREE.MeshBasicMaterial({color: 0xffffff, side: THREE.DoubleSide, vertexColors: THREE.FaceColors});
   /*
@@ -252,29 +338,43 @@ function initWebGl() {
       STANDARD: '',
       USE_COLOR: '',
     },
-    uniforms: THREE.RippleShader.uniforms,
+    uniforms: RippleShader.uniforms,
+    //uniforms: THREE.ShaderLib.standard.uniforms,
     //vertexShader: THREE.RippleShader.vertex,
-    vertexShader: THREE.RippleShader.vertex,
+    vertexShader: RippleShader.vertex,
     //fragmentShader: THREE.RippleShader.fragment,
     fragmentShader: THREE.ShaderLib['standard'].fragmentShader,
     lights: true,
     fog: false,
   });
-  //material.uniforms.color.value.set(0x000099);
-  //material.uniforms.ambientLightColor.value = [255, 255, 1];
-  //window.material = material;
-  //const materials = new THREE.MeshFaceMaterial([material]);
+
+  /*
+  material = new THREE.MeshStandardMaterial({
+    vertexColors: true,
+    color: 0x00ff00,
+  });
+  */
+
   plane = new THREE.Mesh(planeGeometry, material);
 
-  material.uniforms.diffuse.value.set(0x6666dd);
+  //material.uniforms.diffuse.value.set(0x6666dd);
+  //material.color = new THREE.Color(0x6666dd);
 
   const planeScene = new THREE.Scene();
-  planeScene.position.y += canvas.height / 2;
+  planeScene.position.y -= canvas.height / 2;
   planeScene.position.x -= canvas.width / 2;
-  planeScene.rotateX(-Math.PI / 4);
+  //planeScene.rotateX(-Math.PI / 4);
   planeScene.add(plane);
 
+  const planeScene2 = new THREE.Scene();
+  planeScene2.rotateX(-Math.PI / 4);
+  //planeScene2.position.y += 250;
+  planeScene2.add(planeScene);
+
   scene = new THREE.Scene();
+
+  //scene.rotateY(-4 * Math.PI / 4);
+
   var light = new THREE.AmbientLight(0x404040); // soft white light
   scene.add(light);
 
@@ -288,7 +388,13 @@ function initWebGl() {
   scene.add(pointLight);
   */
 
-  scene.add(planeScene);
+  scene.add(planeScene2);
+
+  const cube = new THREE.Mesh(
+    new THREE.BoxGeometry(100, 100, 100),
+    new THREE.MeshStandardMaterial({color: 0xff0000}),
+  );
+  scene.add(cube);
 
   initPostprocessing();
 
@@ -296,7 +402,7 @@ function initWebGl() {
 }
 
 function initPostprocessing() {
-  const renderPass = new THREE.RenderPass(scene, camera);
+  const renderPass = new RenderPass(scene, camera);
 
   depthMaterial = new THREE.MeshDepthMaterial();
   depthMaterial.depthPacking = THREE.RGBADepthPacking;
@@ -311,7 +417,8 @@ function initPostprocessing() {
     },
   );
 
-  const ssaoPass = new THREE.ShaderPass(THREE.SSAOShader);
+  /*
+  const ssaoPass = new ShaderPass(SSAOShader);
   ssaoPass.renderToScreen = true;
 
   const uniforms = ssaoPass.uniforms;
@@ -322,8 +429,10 @@ function initPostprocessing() {
   uniforms['onlyAO'].value = false; // not sure what this means
   uniforms['aoClamp'].value = 0.3;
   uniforms['lumInfluence'].value = 0.5;
+  */
+  const ssaoPass = new SSAOPass(scene, camera, window.innerWidth, window.innerHeight);
 
-  effectComposer = new THREE.EffectComposer(renderer);
+  effectComposer = new EffectComposer(renderer);
   effectComposer.setSize(window.innerWidth, window.innerHeight);
   effectComposer.addPass(renderPass);
   effectComposer.addPass(ssaoPass);
@@ -399,9 +508,11 @@ function drawWebGl(time) {
   var radiansPerDistance;
   var ripple, vertex, distance, rippleTime;
 
+  /*
   for (let vertex of plane.geometry.vertices) {
     vertex.z = 0;
   }
+  */
 
   for (let i = 0; i < rippleLength; ) {
     const ripple = ripples[i];
@@ -607,7 +718,7 @@ async function handleCanvasTap(event) {
 
   if (rippleLength < MAX_RIPPLES) {
     Object.assign(ripples[rippleLength], {
-      center: new THREE.Vector3(click.x, -click.y, 0),
+      center: new THREE.Vector3(click.x, canvas.height - click.y, 0),
       magnitude: 1,
       start: currentTime,
       // might not need rest

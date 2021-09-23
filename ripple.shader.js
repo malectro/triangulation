@@ -1,8 +1,9 @@
+import * as THREE from 'three';
 import vert from './ripple.vert';
 
-THREE.RippleShader = {
+export const RippleShader = {
   get uniforms() {
-    return Object.assign(
+    return THREE.UniformsUtils.merge([
       THREE.UniformsUtils.clone(THREE.ShaderLib['standard'].uniforms),
       {
         ripples: {
@@ -17,13 +18,13 @@ THREE.RippleShader = {
           value: [],
         },
         rippleLength: {
-          values: 0,
+          value: 0,
         },
         time: {
           value: 0,
         },
       },
-    );
+    ]);
   },
 
   vertex: vert,
