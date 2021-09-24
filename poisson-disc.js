@@ -173,7 +173,7 @@ function drawAll() {
 let scene;
 const fov = 45;
 const zPos = window.innerHeight / (Math.sin(((fov / 2) * Math.PI) / 180) * 2);
-//const zPos = 1000;
+//const zPos = 400;
 const camera = new THREE.PerspectiveCamera(
   fov,
   window.innerWidth / window.innerHeight,
@@ -252,7 +252,7 @@ function initWebGl() {
       );
       */
       vertices.push(
-        point.x, point.y, 0,
+        point.x - halfWidth, point.y - halfHeight, 0,
       );
     }
 
@@ -361,13 +361,15 @@ function initWebGl() {
   //material.color = new THREE.Color(0x6666dd);
 
   const planeScene = new THREE.Scene();
+  /*
   planeScene.position.y -= canvas.height / 2;
   planeScene.position.x -= canvas.width / 2;
+  */
   //planeScene.rotateX(-Math.PI / 4);
   planeScene.add(plane);
 
   const planeScene2 = new THREE.Scene();
-  planeScene2.rotateX(-Math.PI / 4);
+  //planeScene2.rotateX(-Math.PI / 4);
   //planeScene2.position.y += 250;
   planeScene2.add(planeScene);
 
@@ -390,11 +392,13 @@ function initWebGl() {
 
   scene.add(planeScene2);
 
+  /*
   const cube = new THREE.Mesh(
     new THREE.BoxGeometry(100, 100, 100),
     new THREE.MeshStandardMaterial({color: 0xff0000}),
   );
   scene.add(cube);
+  */
 
   initPostprocessing();
 
@@ -701,6 +705,17 @@ canvas.addEventListener('mousemove', _.throttle(function (event) {
 
 }, 10));
 */
+
+const FACTOR = 0.005;
+window.addEventListener('wheel', event => {
+  console.log('event', event);
+  if (event.shiftKey) {
+    camera.position.z += event.deltaY * 0.1;
+  }  else {
+  scene.rotateY(event.deltaX * FACTOR);
+  scene.rotateX(event.deltaY * FACTOR);
+  }
+});
 
 run();
 
