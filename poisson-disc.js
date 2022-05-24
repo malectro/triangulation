@@ -263,7 +263,7 @@ function initWebGl() {
     }
 
     //const color = [poly.color.r / 255, poly.color.g / 255, poly.color.b / 255];
-    const color = [0.3, 0.3, 0.3];
+    const color = [0.8, 0.8, 0.8];
     colors.push(...color, ...color, ...color);
 
     normals.push(0, 0, 1, 0, 0, 1, 0, 0, 1);
