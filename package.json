@@ -5,8 +5,7 @@
   "private": true,
   "scripts": {
     "start": "parcel index-parcel.html",
-    "build": "babel poisson-disc.js -d build",
-    "bower": "bower install"
+    "build": "parcel build index-parcel.html"
   },
   "dependencies": {
     "poly2tri": "^1.5.0",

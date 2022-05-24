@@ -8,7 +8,6 @@ import {SSAOPass} from 'three/examples/jsm/postprocessing/SSAOPass.js';
 
 import {RippleShader} from './ripple.shader.js';
 
-
 const document = window.document;
 
 var currentImage = new Image();
@@ -19,8 +18,10 @@ currentImage.addEventListener('load', function() {
 });
 
 var canvas1 = document.createElement('canvas');
-canvas1.width = window.innerWidth;
-canvas1.height = window.innerHeight;
+canvas1.width = window.innerWidth * window.devicePixelRatio;
+canvas1.height = window.innerHeight * window.devicePixelRatio;
+canvas1.style.width = window.innerWidth + 'px';
+canvas1.style.height = window.innerHeight + 'px';
 canvas1.style.zIndex = 2;
 document.body.appendChild(canvas1);
 var ctx1 = canvas1.getContext('2d');
@@ -172,15 +173,16 @@ function drawAll() {
 
 let scene;
 const fov = 45;
-const zPos = window.innerHeight / (Math.sin(((fov / 2) * Math.PI) / 180) * 2);
+const zPos = window.innerHeight * window.devicePixelRatio / (Math.sin(((fov / 2) * Math.PI) / 180) * 2);
 //const zPos = 400;
 const camera = new THREE.PerspectiveCamera(
   fov,
-  window.innerWidth / window.innerHeight,
+  window.innerWidth  / window.innerHeight,
   1,
-  zPos + 100,
+  zPos + 200,
 );
 camera.position.z = zPos * 0.9;
+//camera.position.z = 10;
 
 /*
 window.innerHeight / 2 = Math.sin(fov / 2) * z;
@@ -189,7 +191,7 @@ z = (window.innerHeight / 2) / Math.sin(fov / 2);
 
 const renderer = new THREE.WebGLRenderer();
 
-//renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.domElement.style.zIndex = 3;
 
@@ -198,8 +200,8 @@ document.body.appendChild(renderer.domElement);
 canvas.style.display = 'none';
 canvas = renderer.domElement;
 
-var webGlPoints = [];
-var plane;
+let webGlPoints = [];
+let plane;
 
 let depthMaterial;
 let depthRenderTarget;
@@ -241,7 +243,9 @@ function initWebGl() {
   let colors = [];
   let faces = [];
   const halfHeight = canvas.height / 2;
-  const halfWidth = canvas.height / 2;
+  const halfWidth = canvas.width / 2;
+  let least = [0, 0];
+  let most = [0, 0];
   for (i = 0; i < polygons.length; i++) {
     poly = polygons[i];
     for (let j = 0; j < 3; j++) {
@@ -251,28 +255,35 @@ function initWebGl() {
         point.x - halfWidth, point.y - halfHeight, 0,
       );
       */
-      vertices.push(
-        point.x - halfWidth, point.y - halfHeight, 0,
-      );
+      vertices.push(point.x - halfWidth, point.y - halfHeight, 0);
+      least[0] = Math.min(point.x - halfWidth, least[0]);
+      least[1] = Math.min(point.y - halfHeight, least[1]);
+      most[0] = Math.max(point.x - halfWidth, most[0]);
+      most[1] = Math.max(point.y - halfHeight, most[1]);
     }
 
-    const color = [poly.color.r / 255, poly.color.g / 255, poly.color.b / 255];
-    colors.push(
-      ...color, ...color, ...color,
-    );
+    //const color = [poly.color.r / 255, poly.color.g / 255, poly.color.b / 255];
+    const color = [0.3, 0.3, 0.3];
+    colors.push(...color, ...color, ...color);
 
-    normals.push(
-      0, 0, 1,
-      0, 0, 1,
-      0, 0, 1,
-    );
+    normals.push(0, 0, 1, 0, 0, 1, 0, 0, 1);
   }
+  console.log('hi', most, least);
 
   console.log('colors', colors);
 
-  planeGeometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-  planeGeometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
-  planeGeometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+  planeGeometry.setAttribute(
+    'position',
+    new THREE.Float32BufferAttribute(vertices, 3),
+  );
+  planeGeometry.setAttribute(
+    'normal',
+    new THREE.Float32BufferAttribute(normals, 3),
+  );
+  planeGeometry.setAttribute(
+    'color',
+    new THREE.Float32BufferAttribute(colors, 3),
+  );
 
   //planeGeometry = new THREE.PlaneGeometry(200, 200, 100, 100);
   //planeGeometry.computeBoundingSphere();
@@ -309,6 +320,9 @@ function initWebGl() {
   */
 
   plane = new THREE.Mesh(planeGeometry, material);
+
+  console.log('position', plane.position);
+  console.log('camera', camera.position);
 
   //material.uniforms.diffuse.value.set(0x6666dd);
   //material.color = new THREE.Color(0x6666dd);
@@ -361,6 +375,8 @@ function initWebGl() {
 function initPostprocessing() {
   const renderPass = new RenderPass(scene, camera);
 
+  console.log('main scene', scene);
+
   depthMaterial = new THREE.MeshDepthMaterial();
   depthMaterial.depthPacking = THREE.RGBADepthPacking;
   depthMaterial.blending = THREE.NoBlending;
@@ -387,12 +403,17 @@ function initPostprocessing() {
   uniforms['aoClamp'].value = 0.3;
   uniforms['lumInfluence'].value = 0.5;
   */
-  const ssaoPass = new SSAOPass(scene, camera, window.innerWidth, window.innerHeight);
+  const ssaoPass = new SSAOPass(
+    scene,
+    camera,
+    window.innerWidth,
+    window.innerHeight,
+  );
 
   effectComposer = new EffectComposer(renderer);
   effectComposer.setSize(window.innerWidth, window.innerHeight);
   effectComposer.addPass(renderPass);
-  effectComposer.addPass(ssaoPass);
+  //effectComposer.addPass(ssaoPass);
 }
 
 function initPostprocessing2() {
@@ -528,7 +549,9 @@ function run() {
   runButton.disabled = true;
 
   var begin = new Date() - 0;
-  var poisson = new Worker(new URL('poisson-ptri.js', import.meta.url), {type: 'module'});
+  var poisson = new Worker(new URL('poisson-ptri.js', import.meta.url), {
+    type: 'module',
+  });
 
   poisson.onmessage = function(event) {
     polygons = event.data[0];
@@ -664,9 +687,9 @@ window.addEventListener('wheel', event => {
   console.log('event', event);
   if (event.shiftKey) {
     camera.position.z += event.deltaY * 0.1;
-  }  else {
-  scene.rotateY(event.deltaX * FACTOR);
-  scene.rotateX(event.deltaY * FACTOR);
+  } else {
+    scene.rotateY(event.deltaX * FACTOR);
+    scene.rotateX(event.deltaY * FACTOR);
   }
 });
 
@@ -675,18 +698,22 @@ run();
 async function handleCanvasTap(event) {
   event.preventDefault();
 
-  let touch;
-  let click;
-  if (event.touches) {
-    touch = event.changedTouches[0];
-    click = {x: touch.pageX, y: touch.pageY};
-  } else {
-    click = {x: event.offsetX, y: event.offsetY};
-  }
+  const click = {
+    x: event.pageX * window.devicePixelRatio,
+    y: event.pageY * window.devicePixelRatio,
+    /*
+    x: event.pageX,
+    y: event.pageY,
+*/
+  };
 
   if (rippleLength < MAX_RIPPLES) {
     Object.assign(ripples[rippleLength], {
-      center: new THREE.Vector3(click.x - canvas.width / 2, canvas.height / 2 - click.y, 0),
+      center: new THREE.Vector3(
+        click.x - canvas.width / 2,
+        canvas.height / 2 - click.y,
+        0,
+      ),
       magnitude: 1,
       start: currentTime,
       // might not need rest
@@ -731,8 +758,7 @@ async function handleCanvasTap(event) {
   */
 }
 
-canvas.addEventListener('touchstart', handleCanvasTap);
-canvas.addEventListener('click', handleCanvasTap);
+canvas.addEventListener('pointerdown', handleCanvasTap);
 
 // audio
 var audio;

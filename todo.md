@@ -1,0 +1,1 @@
+- [ ] make texture opacity configurable

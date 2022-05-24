@@ -113,8 +113,8 @@ void main() {
     position.xyz
   );
   */
-  //vColor.xyz += (rColor.xyz * 0.5);
-  vColor.xyz = color.xyz + (transformed.z / 20.0);
+  vColor.xyz += (rColor.xyz * 0.5);
+  //vColor.xyz = color.xyz + (transformed.z / 20.0);
 
   #include <displacementmap_vertex>
 	#include <morphtarget_vertex>
