@@ -43,8 +43,8 @@ function drawImg(img) {
       x: (points[ps[0]].x + points[ps[1]].x + points[ps[2]].x) / 3,
       y: (points[ps[0]].y + points[ps[1]].y + points[ps[2]].y) / 3,
     };
-    //poly.color = colorForPoint(imgData.data, poly.c);
-    poly.color = defaultColor;
+    poly.color = colorForPoint(imgData.data, poly.c);
+    //poly.color = defaultColor;
   }
 
   currentImage = img;
@@ -266,56 +266,9 @@ function initWebGl() {
       0, 0, 1,
       0, 0, 1,
     );
-    /*
-    color = new THREE.Color(poly.color.toHexNumber());
-    normal = new THREE.Vector3(0, 0, 1);
-    planeGeometry.faces.push(
-      new THREE.Face3(
-        poly.points[2],
-        poly.points[1],
-        poly.points[0],
-        normal,
-        color,
-        0,
-      ),
-    );
-    */
   }
 
-  /*
-  console.log('min max',
-    points.reduce((min, p) => Math.min(p.y, min), Infinity),
-    points.reduce((max, p) => Math.max(p.y, max), -Infinity),
-  );
-  */
-
-  /*
-  vertices = [
-    -100, -100, 0,
-    100, 100, 0,
-    -100, 100, 0,
-
-    -100, -100, 0,
-    100, -100, 0,
-    100, 100, 0,
-  ];
-  normals = [
-    0, 0, 1,
-    0, 0, 1,
-    0, 0, 1,
-    0, 0, 1,
-    0, 0, 1,
-    0, 0, 1,
-  ],
-  colors = [
-    0, 0, 1,
-    0, 0, 1,
-    0, 0, 1,
-    0, 0, 1,
-    0, 0, 1,
-    0, 0, 1,
-  ]
-  */
+  console.log('colors', colors);
 
   planeGeometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
   planeGeometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
@@ -733,7 +686,7 @@ async function handleCanvasTap(event) {
 
   if (rippleLength < MAX_RIPPLES) {
     Object.assign(ripples[rippleLength], {
-      center: new THREE.Vector3(click.x, canvas.height - click.y, 0),
+      center: new THREE.Vector3(click.x - canvas.width / 2, canvas.height / 2 - click.y, 0),
       magnitude: 1,
       start: currentTime,
       // might not need rest
