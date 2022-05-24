@@ -4,8 +4,8 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "parcel index-parcel.html",
-    "build": "parcel build index-parcel.html"
+    "start": "parcel index.html",
+    "build": "parcel build --public-url '/mixing-pool/' index.html"
   },
   "dependencies": {
     "poly2tri": "^1.5.0",

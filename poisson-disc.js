@@ -10,21 +10,21 @@ import {RippleShader} from './ripple.shader.js';
 
 const document = window.document;
 
-var currentImage = new Image();
+let currentImage = new Image();
 currentImage.src = new URL('hubble.jpg', import.meta.url);
 currentImage.addEventListener('load', function() {
   currentImage.loaded = true;
   drawImg(currentImage);
 });
 
-var canvas1 = document.createElement('canvas');
+let canvas1 = document.createElement('canvas');
 canvas1.width = window.innerWidth * window.devicePixelRatio;
 canvas1.height = window.innerHeight * window.devicePixelRatio;
 canvas1.style.width = window.innerWidth + 'px';
 canvas1.style.height = window.innerHeight + 'px';
 canvas1.style.zIndex = 2;
 document.body.appendChild(canvas1);
-var ctx1 = canvas1.getContext('2d');
+let ctx1 = canvas1.getContext('2d');
 
 const defaultColor = makeColor(200, 200, 200);
 
@@ -33,11 +33,11 @@ function drawImg(img) {
   ctx1.clearRect(0, 0, canvas1.width, canvas1.height);
   ctx1.drawImage(img, 0, 0, canvas1.width, canvas1.height);
 
-  var imgData = ctx1.getImageData(0, 0, canvas1.width, canvas1.height);
+  let imgData = ctx1.getImageData(0, 0, canvas1.width, canvas1.height);
 
-  var ps;
-  var poly;
-  for (var i = 0; i < polygons.length; i++) {
+  let ps;
+  let poly;
+  for (let i = 0; i < polygons.length; i++) {
     poly = polygons[i];
     ps = poly.points;
     poly.c = {
@@ -65,7 +65,7 @@ function makeColor(r, g, b) {
 }
 
 function colorForPoint(imgData, p) {
-  var index = Math.floor(p.x) * 4 + Math.floor(p.y) * canvas.width * 4;
+  let index = Math.floor(p.x) * 4 + Math.floor(p.y) * canvas.width * 4;
   return {
     r: imgData[index],
     g: imgData[index + 1],
@@ -75,27 +75,27 @@ function colorForPoint(imgData, p) {
   };
 }
 
-var canvas = document.createElement('canvas');
+let canvas = document.createElement('canvas');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 canvas.style.background = '#eee';
 canvas.style.zIndex = 3;
 document.body.appendChild(canvas);
 
-var ctx = canvas.getContext('2d');
+let ctx = canvas.getContext('2d');
 ctx.fillStyle = 'black';
 
 // the algorithm
 const PI2 = Math.PI * 2;
-var RADIUS = 10;
-var RADIUS2 = RADIUS * 2;
-var CANDIDATES = 10;
+let RADIUS = 10;
+let RADIUS2 = RADIUS * 2;
+let CANDIDATES = 10;
 const INTERVAL = 20;
 
-var polygons = [];
-var points = [];
-var active = [];
-var quadtree;
+let polygons = [];
+let points = [];
+let active = [];
+let quadtree;
 
 let useSsao = false;
 let showMesh = false;
@@ -103,8 +103,8 @@ let showMesh = false;
 function randomColor(variation, base) {
   variation = variation || 10;
   base = base || {r: 120, g: 120, b: 120};
-  var half = variation / 2;
-  var color = {
+  let half = variation / 2;
+  let color = {
     r: Math.round(Math.random() * variation - half + base.r),
     g: Math.round(Math.random() * variation - half + base.g),
     b: Math.round(Math.random() * variation - half + base.b),
@@ -122,8 +122,8 @@ function colorToHexNumber() {
 }
 
 function drawAll() {
-  var vx, vy;
-  var i, j, k, poly, point, sibling;
+  let vx, vy;
+  let i, j, k, poly, point, sibling;
   /*
   for (i = 0; i < points.length; i++) {
     point = points[i];
@@ -155,8 +155,8 @@ function drawAll() {
   ctx.clearRect(0, 0, 1000000, 1000000);
 
   ctx.strokeStyle = 'black';
-  var polygon;
-  for (i = 0; i < polygons.length; i++) {
+  let polygon;
+  for (let i = 0; i < polygons.length; i++) {
     polygon = polygons[i];
     ctx.fillStyle = polygon.color + '';
     pps = polygon.points;
@@ -214,11 +214,11 @@ function initWebGl() {
     return;
   }
 
-  var point, poly, idx;
+  let point, poly, idx;
   /*
-  for (var i = 0; i < points.length; i++) {
+  for (let i = 0; i < points.length; i++) {
     point = points[i];
-    for (var j = 0; j < point.polygons.length; j++) {
+    for (let j = 0; j < point.polygons.length; j++) {
       poly = point.polygons[j];
       if (!poly.pointIndices) {
         poly.pointIndices = [];
@@ -234,7 +234,7 @@ function initWebGl() {
   let normal, color;
   let vertices = [];
   let normals = [];
-  for (i = 0; i < points.length; i++) {
+  for (let i = 0; i < points.length; i++) {
     point = points[i];
     //vertices.push(pointx, -point.y, 0);
     //normals.push(0, 0, 1);
@@ -246,7 +246,7 @@ function initWebGl() {
   const halfWidth = canvas.width / 2;
   let least = [0, 0];
   let most = [0, 0];
-  for (i = 0; i < polygons.length; i++) {
+  for (let i = 0; i < polygons.length; i++) {
     poly = polygons[i];
     for (let j = 0; j < 3; j++) {
       const point = points[poly.points[j]];
@@ -289,7 +289,7 @@ function initWebGl() {
   //planeGeometry.computeBoundingSphere();
   //planeGeometry.computeFaceNormals();
 
-  //var material = new THREE.MeshBasicMaterial({color: 0xffffff, side: THREE.DoubleSide, vertexColors: THREE.FaceColors});
+  //let material = new THREE.MeshBasicMaterial({color: 0xffffff, side: THREE.DoubleSide, vertexColors: THREE.FaceColors});
   /*
   const material = new THREE.MeshLambertMaterial({
     color: 0xffffff,
@@ -344,15 +344,15 @@ function initWebGl() {
 
   //scene.rotateY(-4 * Math.PI / 4);
 
-  var light = new THREE.AmbientLight(0x404040); // soft white light
+  let light = new THREE.AmbientLight(0x404040); // soft white light
   scene.add(light);
 
-  var directionalLight = new THREE.DirectionalLight(0xffffff, 0.2);
+  let directionalLight = new THREE.DirectionalLight(0xffffff, 0.2);
   directionalLight.position.set(1, 1, 1).normalize();
   scene.add(directionalLight);
 
   /*
-  var pointLight = new THREE.PointLight(0xffffff, 0.5, 0);
+  let pointLight = new THREE.PointLight(0xffffff, 0.5, 0);
   pointLight.position.set(50, 50, 600);
   scene.add(pointLight);
   */
@@ -480,11 +480,11 @@ function drawWebGl(time) {
   uniforms.ripples.value = ripples;
   uniforms.rippleLength.value = rippleLength;
 
-  var frequency = 2 * 1000;
-  var secondsPerCycle = 2000;
-  var radiansPerCycle = (time / secondsPerCycle) * Math.PI * 2;
-  var radiansPerDistance;
-  var ripple, vertex, distance, rippleTime;
+  let frequency = 2 * 1000;
+  let secondsPerCycle = 2000;
+  let radiansPerCycle = (time / secondsPerCycle) * Math.PI * 2;
+  let radiansPerDistance;
+  let ripple, vertex, distance, rippleTime;
 
   /*
   for (let vertex of plane.geometry.vertices) {
@@ -548,8 +548,8 @@ function drawWebGl(time) {
 function run() {
   runButton.disabled = true;
 
-  var begin = new Date() - 0;
-  var poisson = new Worker(new URL('poisson-ptri.js', import.meta.url), {
+  let begin = new Date() - 0;
+  let poisson = new Worker(new URL('poisson-ptri.js', import.meta.url), {
     type: 'module',
   });
 
@@ -567,8 +567,8 @@ function run() {
   poisson.postMessage([RADIUS, CANDIDATES, canvas.width, canvas.height]);
 
   /*
-  var begin = (new Date()) - 0;
-  var poisson = new Worker('poisson.js');
+  let begin = (new Date()) - 0;
+  let poisson = new Worker('poisson.js');
 
   poisson.onmessage = function (event) {
     points = event.data[0];
@@ -577,7 +577,7 @@ function run() {
     console.log('poisson took ms', (new Date()) - begin);
     begin = new Date() - 0;
 
-    var worker = new Worker('ptri.js');
+    let worker = new Worker('ptri.js');
     worker.onmessage = function (event) {
       polygons = event.data[0];
       points = event.data[1];
@@ -595,7 +595,7 @@ function run() {
   */
 }
 
-var opacity;
+let opacity;
 /*
 canvas.addEventListener('mousedown', function () {
   opacity = canvas.style.opacity;
@@ -606,10 +606,10 @@ canvas.addEventListener('mouseup', function () {
 });
 */
 
-var input = document.getElementById('file');
-var result;
+let input = document.getElementById('file');
+let result;
 input.addEventListener('change', function() {
-  var img = new Image();
+  let img = new Image();
 
   img.addEventListener('load', function() {
     img.loaded = true;
@@ -619,19 +619,19 @@ input.addEventListener('change', function() {
   img.src = URL.createObjectURL(input.files[0]);
 });
 
-var radiusInput = document.getElementById('radius');
+let radiusInput = document.getElementById('radius');
 radiusInput.addEventListener('change', function() {
   RADIUS = parseInt(radiusInput.value, 10);
 });
 RADIUS = parseInt(radiusInput.value, 10);
 
-var candidatesInput = document.getElementById('candidates');
+let candidatesInput = document.getElementById('candidates');
 candidatesInput.addEventListener('change', function() {
   CANDIDATES = parseInt(candidatesInput.value, 10);
 });
 CANDIDATES = parseInt(candidatesInput.value, 10);
 
-var opacityInput = document.getElementById('opacity');
+let opacityInput = document.getElementById('opacity');
 opacityInput.addEventListener('change', function() {
   canvas.style.opacity = parseFloat(opacityInput.value, 10);
 });
@@ -649,10 +649,10 @@ ssaoInput.addEventListener('change', () => {
 });
 useSsao = ssaoInput.checked;
 
-var runButton = document.getElementById('run');
+let runButton = document.getElementById('run');
 runButton.addEventListener('click', run);
 
-var controls = document.getElementById('controls');
+let controls = document.getElementById('controls');
 document.getElementById('hide').addEventListener('click', function() {
   controls.className = 'hide';
 });
@@ -724,7 +724,7 @@ async function handleCanvasTap(event) {
     rippleLength++;
   }
 
-  var rand = Math.floor(Math.random() * audio.bufferArray.length);
+  let rand = Math.floor(Math.random() * audio.bufferArray.length);
 
   await audio.ctx.resume();
   const sampler = audio.ctx.createBufferSource();
@@ -761,32 +761,32 @@ async function handleCanvasTap(event) {
 canvas.addEventListener('pointerdown', handleCanvasTap);
 
 // audio
-var audio;
+let audio;
 
 (function() {
-  var AudioContext = window.AudioContext || window.webkitAudioContext;
-  var ctx = new AudioContext();
+  let AudioContext = window.AudioContext || window.webkitAudioContext;
+  let ctx = new AudioContext();
 
-  var masterGain = ctx.createGain();
+  let masterGain = ctx.createGain();
   masterGain.gain.setValueAtTime(1.0, ctx.currentTime);
   masterGain.connect(ctx.destination);
 
-  var master = ctx.createDynamicsCompressor();
+  let master = ctx.createDynamicsCompressor();
   master.connect(masterGain);
 
-  var srces = [
+  let srces = [
     'pianos/b.wav',
     'pianos/c-sharp.wav',
     'pianos/e.wav',
     'pianos/f-sharp.wav',
     'pianos/g-sharp.wav',
   ];
-  var buffers = {};
-  var bufferArray = [];
-  var count = srces.length;
-  var loaded = false;
+  let buffers = {};
+  let bufferArray = [];
+  let count = srces.length;
+  let loaded = false;
 
-  for (src of srces) {
+  for (const src of srces) {
     let request = new XMLHttpRequest();
     request.open('GET', src, true);
     request.responseType = 'arraybuffer';
