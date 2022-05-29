@@ -173,11 +173,13 @@ function drawAll() {
 
 let scene;
 const fov = 45;
-const zPos = window.innerHeight * window.devicePixelRatio / (Math.sin(((fov / 2) * Math.PI) / 180) * 2);
+const zPos =
+  (window.innerHeight * window.devicePixelRatio) /
+  (Math.sin(((fov / 2) * Math.PI) / 180) * 2);
 //const zPos = 400;
 const camera = new THREE.PerspectiveCamera(
   fov,
-  window.innerWidth  / window.innerHeight,
+  window.innerWidth / window.innerHeight,
   1,
   zPos + 200,
 );
@@ -461,7 +463,7 @@ const defaultRipple = {
   radius: 0,
   start: 0,
 };
-const MAX_RIPPLES = 20;
+const MAX_RIPPLES = 30;
 let rippleLength = 0;
 const ripples = [];
 for (let i = 0; i < MAX_RIPPLES; i++) {
@@ -695,6 +697,7 @@ window.addEventListener('wheel', event => {
 
 run();
 
+const pointersDown = new Set();
 async function handleCanvasTap(event) {
   event.preventDefault();
 
@@ -707,31 +710,29 @@ async function handleCanvasTap(event) {
 */
   };
 
+  let nextRipple;
   if (rippleLength < MAX_RIPPLES) {
-    Object.assign(ripples[rippleLength], {
-      center: new THREE.Vector3(
-        click.x - canvas.width / 2,
-        canvas.height / 2 - click.y,
-        0,
-      ),
-      magnitude: 1,
-      start: currentTime,
-      // might not need rest
-      decay: 0.998,
-      speed: 0.1,
-      radius: 0,
-    });
+    nextRipple = ripples[rippleLength];
     rippleLength++;
+  } else {
+    nextRipple = ripples.reduce((acc, ripple) => {
+      return acc.magnitude < ripple.magnitude ? acc : ripple;
+    }, ripples[0]);
   }
 
-  let rand = Math.floor(Math.random() * audio.bufferArray.length);
-
-  await audio.ctx.resume();
-  const sampler = audio.ctx.createBufferSource();
-  sampler.buffer = audio.bufferArray[rand];
-  sampler.connect(audio.master);
-
-  sampler.start(audio.ctx.currentTime);
+  Object.assign(nextRipple, {
+    center: new THREE.Vector3(
+      click.x - canvas.width / 2,
+      canvas.height / 2 - click.y,
+      0,
+    ),
+    magnitude: 1,
+    start: currentTime,
+    // might not need rest
+    decay: 0.998,
+    speed: 0.1,
+    radius: 0,
+  });
 
   /*
   //var points = quadtreeIsWithin(quadtree, click, 100);
@@ -758,7 +759,40 @@ async function handleCanvasTap(event) {
   */
 }
 
-canvas.addEventListener('pointerdown', handleCanvasTap);
+async function playRandomSample() {
+  let rand = Math.floor(Math.random() * audio.bufferArray.length);
+
+  await audio.ctx.resume();
+  const sampler = audio.ctx.createBufferSource();
+  sampler.buffer = audio.bufferArray[rand];
+  sampler.connect(audio.master);
+
+  sampler.start(audio.ctx.currentTime);
+}
+
+const handleCanvasDown = (event) => {
+  pointersDown.add(event.pointerId);
+  handleCanvasTap(event);
+  playRandomSample();
+};
+
+const handleCanvasMove = (event) => {
+  if (pointersDown.has(event.pointerId)) {
+    handleCanvasTap(event);
+  }
+};
+
+const handleCanvasUp = (event) => {
+  console.log('up');
+  pointersDown.delete(event.pointerId);
+};
+
+canvas.addEventListener('pointerdown', handleCanvasDown);
+canvas.addEventListener('pointermove', throttle(handleCanvasMove, 100));
+canvas.addEventListener('pointerup', handleCanvasUp);
+canvas.addEventListener('pointerleave', handleCanvasUp);
+canvas.addEventListener('pointerout', handleCanvasUp);
+canvas.addEventListener('pointerleave', handleCanvasUp);
 
 // audio
 let audio;
@@ -823,3 +857,19 @@ let audio;
     buffers: buffers,
   };
 })();
+
+function throttle(fn, interval) {
+  let timeoutId;
+
+  return (...args) => {
+    if (timeoutId) {
+      return;
+    }
+
+    fn(...args);
+
+    timeoutId = setTimeout(() => {
+      timeoutId = null;
+    }, interval);
+  };
+}

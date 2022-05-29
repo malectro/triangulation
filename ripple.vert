@@ -16,7 +16,7 @@ varying vec3 vViewPosition;
 #include <clipping_planes_pars_vertex>
 
 #define M_2_PI 6.283185307179586
-#define MAX_RIPPLES 20
+#define MAX_RIPPLES 30
 #define SECONDS_PER_CYCLE 2000.0;
 
 struct Ripple {
