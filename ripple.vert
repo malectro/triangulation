@@ -110,7 +110,7 @@ void main() {
       }
     }
   }
-  transformed.z += wave(position.x, position.y) * 100.0;
+  transformed.z += wave(position.x, position.y) * 1000.0;
   /*
   transformed += GerstnerWave(
     //vec4(dir.x, dir.y, ripple.magnitude, ripple.speed),
