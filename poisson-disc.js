@@ -6,7 +6,7 @@ import {EffectComposer} from 'three/examples/jsm/postprocessing/EffectComposer.j
 import {SSAOShader} from 'three/examples/jsm/shaders/SSAOShader.js';
 import {SSAOPass} from 'three/examples/jsm/postprocessing/SSAOPass.js';
 
-import {RippleShader} from './ripple.shader.js';
+import {RippleShader, RippleMaterial} from './ripple.shader.js';
 
 const document = window.document;
 
@@ -299,6 +299,7 @@ function initWebGl() {
   });
   */
 
+  /*
   material = new THREE.ShaderMaterial({
     defines: {
       STANDARD: '',
@@ -310,6 +311,12 @@ function initWebGl() {
     vertexShader: RippleShader.vertex,
     //fragmentShader: THREE.RippleShader.fragment,
     fragmentShader: THREE.ShaderLib['standard'].fragmentShader,
+    lights: true,
+    fog: false,
+  });
+*/
+  material = new RippleMaterial({
+    color: 0xff00ff,
     lights: true,
     fog: false,
   });

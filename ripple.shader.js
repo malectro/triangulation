@@ -30,3 +30,22 @@ export const RippleShader = {
   vertex: vert,
   fragment: THREE.ShaderLib['standard'].fragmentShader,
 };
+
+export class RippleMaterial extends THREE.ShaderMaterial {
+  constructor(params) {
+    super();
+
+    //this.isMeshStandardMaterial = true;
+    //this.type = 'MeshStandardMaterial';
+    this.defines = {
+      STANDARD: '',
+      USE_COLOR: '',
+    };
+    this.color = new THREE.Color(0xffffff);
+    this.uniforms = RippleShader.uniforms;
+    this.vertexShader = RippleShader.vertex;
+    this.fragmentShader = THREE.ShaderLib['standard'].fragmentShader,
+
+    this.setValues(params);
+  }
+}
