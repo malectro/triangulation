@@ -1,3 +1,4 @@
+#define STANDARD
 #define PHYSICAL
 varying vec3 vViewPosition;
 #ifndef FLAT_SHADED
@@ -175,8 +176,8 @@ void main() {
   );
   */
   //vColor.xyz += (rColor.xyz * 0.5);
-  //vColor.xyz = color.xyz + (transformed.z / 20.0);
-  vColor.xyz = color.xyz;
+  vColor.xyz *= (transformed.z / 20.0);
+  //vColor.xyz = color.xyz;
 
   #include <displacementmap_vertex>
 	#include <morphtarget_vertex>

@@ -315,18 +315,22 @@ function initWebGl() {
     fog: false,
   });
 */
+  /*
   material = new RippleMaterial({
     color: 0xff00ff,
     lights: true,
     fog: false,
+    uniforms: {
+      color: {value: new THREE.Color(0xff00ff)},
+      diffuse: {value: new THREE.Color(0xff00ff)},
+    },
   });
+*/
 
-  /*
   material = new THREE.MeshStandardMaterial({
-    vertexColors: true,
+    //vertexColors: true,
     color: 0x00ff00,
   });
-  */
 
   plane = new THREE.Mesh(planeGeometry, material);
 
@@ -485,12 +489,14 @@ function drawWebGl(time) {
 
   const {uniforms} = material;
 
+  /*
   uniforms.time.value = currentTime;
   uniforms.ripples.value = ripples;
   uniforms.rippleLength.value = rippleLength;
   uniforms.emissive.value.set(
     1, 0, 1
   );
+*/
   if (!window.asdf) {
     console.log('uniforms', uniforms);
     window.asdf = true;
