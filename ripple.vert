@@ -28,6 +28,12 @@ struct Ripple {
   float start;
 };
 
+struct DirectionalWave {
+  vec2 dir;
+  float amplitude;
+  float wavelength;
+};
+
 uniform float time;
 uniform Ripple ripples[MAX_RIPPLES];
 uniform int rippleLength;
@@ -48,11 +54,42 @@ vec3 GerstnerWave(vec4 wave, vec3 p) {
   );
 }
 
-float wave(float x, float y, float speed, float magnitude) {
-  return sin(sqrt(x * x + y * y) * (sin(time * 0.001) * 0.01) - time * speed) * magnitude;
+float wave(float x, float y, float length, float speed, float magnitude) {
+  //return sin(sqrt(x * x + y * y) * (sin(time * 0.001) * 0.01) - time * speed) * magnitude;
+  return sin(x * length - time * speed) * magnitude;
 }
 
 float rippleAttack = 20.0;
+
+vec3 RippleWave(vec3 point, Ripple ripple) {
+  float dist = distance(ripple.center, point);
+  float rippleTime = time - ripple.start;
+  float radiansPerDistance = (rippleTime - dist / ripple.speed) / SECONDS_PER_CYCLE;
+
+  vec2 dir = normalize(ripple.center.xy - position.xy);
+
+  float amplitude = 20.0 * ripple.magnitude;
+  float wavelength = radiansPerDistance * M_2_PI;
+
+  float rampUp =  min((ripple.radius - dist) / rippleAttack, 10.0);
+
+  return vec3(
+    rampUp * dir.x * amplitude * cos(wavelength),
+    rampUp * dir.y * amplitude * cos(wavelength),
+    amplitude * sin(wavelength)
+  );
+}
+
+vec3 BasicWave(vec3 point, DirectionalWave wave) {
+  return vec3(
+    wave.dir.x * wave.amplitude * cos(wave.wavelength),
+    wave.dir.y * wave.amplitude * cos(wave.wavelength),
+    wave.amplitude * (
+      sin(point.x * wave.wavelength + time * 0.001) +
+      cos(point.y * wave.wavelength + time * 0.001) * 0.5
+    )
+  );
+}
 
 void main() {
 	#include <uv_vertex>
@@ -110,7 +147,13 @@ void main() {
       }
     }
   }
-  transformed.z += wave(position.x, position.y, 0.01, 1.0);
+  //transformed.z += wave(position.x, position.y, 0.01, 0.01, 1.0);
+  transformed.z += BasicWave(position, DirectionalWave(
+    vec2(1.0, 0.0),
+    10.0,
+    0.01
+  )).z;
+
   /*
   transformed += GerstnerWave(
     //vec4(dir.x, dir.y, ripple.magnitude, ripple.speed),
