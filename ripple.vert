@@ -110,7 +110,7 @@ void main() {
       }
     }
   }
-  transformed.z += wave(position.x, position.y) * 10000.0;
+  transformed.z += wave(position.x, position.y) * 100.0;
   /*
   transformed += GerstnerWave(
     //vec4(dir.x, dir.y, ripple.magnitude, ripple.speed),
@@ -118,8 +118,8 @@ void main() {
     position.xyz
   );
   */
-  vColor.xyz += (rColor.xyz * 0.5);
-  //vColor.xyz = color.xyz + (transformed.z / 20.0);
+  //vColor.xyz += (rColor.xyz * 0.5);
+  vColor.xyz = color.xyz + (transformed.z / 20.0);
 
   #include <displacementmap_vertex>
 	#include <morphtarget_vertex>
