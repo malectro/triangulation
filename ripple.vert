@@ -48,8 +48,8 @@ vec3 GerstnerWave(vec4 wave, vec3 p) {
   );
 }
 
-float wave(float x, float y) {
-  return sin(sqrt(x * x + y * y) - time * 0.001) * 0.5;
+float wave(float x, float y, float speed, float magnitude) {
+  return sin(sqrt(x * x + y * y) * (sin(time * 0.001) * 0.01) - time * speed) * magnitude;
 }
 
 float rippleAttack = 20.0;
@@ -100,7 +100,7 @@ void main() {
         float amplitude = 20.0 * ripple.magnitude;
         float wavelength = radiansPerDistance * M_2_PI;
 
-        float rampUp =  min((ripple.radius - dist) / rippleAttack, 1.0);
+        float rampUp =  min((ripple.radius - dist) / rippleAttack, 10.0);
 
         transformed.xyz += vec3(
           rampUp * dir.x * amplitude * cos(wavelength),
@@ -110,7 +110,7 @@ void main() {
       }
     }
   }
-  transformed.z += wave(position.x, position.y) * 1000.0;
+  transformed.z += wave(position.x, position.y, 0.01, 1.0);
   /*
   transformed += GerstnerWave(
     //vec4(dir.x, dir.y, ripple.magnitude, ripple.speed),
