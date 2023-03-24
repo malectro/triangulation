@@ -48,6 +48,10 @@ vec3 GerstnerWave(vec4 wave, vec3 p) {
   );
 }
 
+float wave(float x, float y) {
+  return sin(sqrt(x * x + y * y) - time * 0.001) * 0.5;
+}
+
 float rippleAttack = 20.0;
 
 void main() {
@@ -106,6 +110,7 @@ void main() {
       }
     }
   }
+  transformed.z += wave(position.x, position.y) * 10000.0;
   /*
   transformed += GerstnerWave(
     //vec4(dir.x, dir.y, ripple.magnitude, ripple.speed),
