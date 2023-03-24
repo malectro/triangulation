@@ -32,6 +32,7 @@ struct DirectionalWave {
   vec2 dir;
   float amplitude;
   float wavelength;
+  float speed;
 };
 
 uniform float time;
@@ -84,9 +85,8 @@ vec3 BasicWave(vec3 point, DirectionalWave wave) {
   return vec3(
     wave.dir.x * wave.amplitude * cos(wave.wavelength),
     wave.dir.y * wave.amplitude * cos(wave.wavelength),
-    wave.amplitude * (
-      sin(point.x * wave.wavelength + time * 0.001) +
-      cos(point.y * wave.wavelength + time * 0.001) * 0.5
+    wave.amplitude * sin(
+      wave.wavelength * dot(point.xy, wave.dir) + time * wave.speed
     )
   );
 }
@@ -151,7 +151,20 @@ void main() {
   transformed.z += BasicWave(position, DirectionalWave(
     vec2(1.0, 0.0),
     10.0,
-    0.01
+    0.01,
+    0.001
+  )).z;
+  transformed.z += BasicWave(position, DirectionalWave(
+    normalize(vec2(-1.0, 1.0)),
+    8.0,
+    0.02,
+    0.0008
+  )).z;
+  transformed.z += BasicWave(position, DirectionalWave(
+    normalize(vec2(2.0, -8.0)),
+    12.0,
+    0.005,
+    0.0012
   )).z;
 
   /*

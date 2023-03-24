@@ -481,6 +481,13 @@ function drawWebGl(time) {
   uniforms.time.value = currentTime;
   uniforms.ripples.value = ripples;
   uniforms.rippleLength.value = rippleLength;
+  uniforms.emissive.value.set(
+    1, 0, 1
+  );
+  if (!window.asdf) {
+    console.log('uniforms', uniforms);
+    window.asdf = true;
+  }
 
   let frequency = 2 * 1000;
   let secondsPerCycle = 2000;
