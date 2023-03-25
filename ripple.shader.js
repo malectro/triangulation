@@ -39,13 +39,13 @@ export class RippleMaterial extends THREE.ShaderMaterial {
     //this.type = 'MeshStandardMaterial';
     this.defines = {
       STANDARD: '',
-      USE_COLOR: '',
     };
 
     this.color = new THREE.Color(0xffffff);
     this.uniforms = THREE.UniformsUtils.merge([RippleShader.uniforms, uniforms]);
     this.vertexShader = RippleShader.vertex;
     this.fragmentShader = THREE.ShaderLib['standard'].fragmentShader,
+    this.vertexColors = true;
 
     this.setValues(params);
   }

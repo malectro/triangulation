@@ -316,9 +316,8 @@ function initWebGl() {
     fog: false,
   });
 */
-  /*
   material = new RippleMaterial({
-    color: 0xff00ff,
+    color: 0x3333ff,
     lights: true,
     fog: false,
     uniforms: {
@@ -326,19 +325,13 @@ function initWebGl() {
       diffuse: {value: new THREE.Color(0xff00ff)},
     },
   });
-*/
 
-  material = extendMaterial(THREE.MeshStandardMaterial, {
+  material2 = extendMaterial(THREE.MeshStandardMaterial, {
     //color: new THREE.Color(0xff00ff),
     material: {
       color: 0xff00ff,
       vertexColors: true,
     },
-    /*
-    defines: {
-      USE_COLOR: '',
-    },
-*/
 
     //class: CustomMa
     uniforms: {
