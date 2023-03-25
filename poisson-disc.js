@@ -7,6 +7,7 @@ import {SSAOShader} from 'three/examples/jsm/shaders/SSAOShader.js';
 import {SSAOPass} from 'three/examples/jsm/postprocessing/SSAOPass.js';
 
 import {RippleShader, RippleMaterial} from './ripple.shader.js';
+import { extendMaterial, CustomShader } from './extendMaterial.ts';
 
 const document = window.document;
 
@@ -327,10 +328,202 @@ function initWebGl() {
   });
 */
 
+  material = extendMaterial(THREE.MeshStandardMaterial, {
+    //color: new THREE.Color(0xff00ff),
+    material: {
+      color: 0xff00ff,
+      vertexColors: true,
+    },
+    /*
+    defines: {
+      USE_COLOR: '',
+    },
+*/
+
+    //class: CustomMa
+    uniforms: {
+      color2: {
+        value: new THREE.Color(0x3333ff),
+      },
+        ripples: {
+          properties: {
+            center: {},
+            magnitude: {},
+            decay: {},
+            speed: {},
+            radius: {},
+            start: {},
+          },
+          value: [],
+        },
+        rippleLength: {
+          value: 0,
+        },
+        time: {
+          value: 0,
+        },
+    },
+
+    vertex: {
+      '#include <clipping_planes_pars_vertex>': `
+#define M_2_PI 6.283185307179586
+#define MAX_RIPPLES 30
+#define SECONDS_PER_CYCLE 2000.0;
+
+struct Ripple {
+  vec3 center;
+  float magnitude;
+  float decay;
+  float speed;
+  float radius;
+  float start;
+};
+
+struct DirectionalWave {
+  vec2 dir;
+  float amplitude;
+  float wavelength;
+  float speed;
+};
+
+uniform vec3 color2;
+uniform float time;
+uniform Ripple ripples[MAX_RIPPLES];
+uniform int rippleLength;
+
+vec3 GerstnerWave(vec4 wave, vec3 p) {
+  float steepness = wave.z;
+  float wavelength = wave.w;
+  float k = 2.0 * PI / wavelength;
+  float c = sqrt(9.8 / k);
+  vec2 d = normalize(wave.xy);
+  float f = k * (dot(d, p.xy) - c * time);
+  float a = steepness / k;
+
+  return vec3(
+    d.x * (a * cos(f)),
+    d.y * (a * cos(f)),
+    a * sin(f)
+  );
+}
+
+float wave(float x, float y, float length, float speed, float magnitude) {
+  //return sin(sqrt(x * x + y * y) * (sin(time * 0.001) * 0.01) - time * speed) * magnitude;
+  return sin(x * length - time * speed) * magnitude;
+}
+
+float rippleAttack = 20.0;
+
+vec3 RippleWave(vec3 point, Ripple ripple) {
+  float dist = distance(ripple.center, point);
+  float rippleTime = time - ripple.start;
+  float radiansPerDistance = (rippleTime - dist / ripple.speed) / SECONDS_PER_CYCLE;
+
+  vec2 dir = normalize(ripple.center.xy - position.xy);
+
+  float amplitude = 20.0 * ripple.magnitude;
+  float wavelength = radiansPerDistance * M_2_PI;
+
+  float rampUp =  min((ripple.radius - dist) / rippleAttack, 10.0);
+
+  return vec3(
+    rampUp * dir.x * amplitude * cos(wavelength),
+    rampUp * dir.y * amplitude * cos(wavelength),
+    amplitude * sin(wavelength)
+  );
+}
+
+vec3 BasicWave(vec3 point, DirectionalWave wave) {
+  return vec3(
+    wave.dir.x * wave.amplitude * cos(wave.wavelength),
+    wave.dir.y * wave.amplitude * cos(wave.wavelength),
+    wave.amplitude * sin(
+      wave.wavelength * dot(point.xy, wave.dir) + time * wave.speed
+    )
+  );
+}
+    `,
+'#include <begin_vertex>': `
+  Ripple ripple;
+  vec3 rColor = vec3(0.0, 0.0, 0.0);
+  for (int i = 0; i < MAX_RIPPLES; i++) {
+    if (i < rippleLength) {
+      ripple = ripples[i];
+      float dist = distance(ripple.center, position);
+      if (dist < ripple.radius) {
+        float rippleTime = time - ripple.start;
+        float radiansPerDistance = (rippleTime - dist / ripple.speed) / SECONDS_PER_CYCLE;
+        rColor.x += sin(radiansPerDistance * PI) * ripple.magnitude;
+        rColor.y += sin(radiansPerDistance * M_2_PI) * ripple.magnitude;
+        rColor.z += cos(radiansPerDistance * M_2_PI) * ripple.magnitude;
+        vec2 dir = normalize(ripple.center.xy - position.xy);
+        /*
+        transformed += GerstnerWave(
+          //vec4(dir.x, dir.y, ripple.magnitude, ripple.speed),
+          vec4(1, 1, 20, 5),
+          position.xyz
+        );
+        */
+        /*
+        transformed.z +=
+          sin(radiansPerDistance * M_2_PI) *
+          20.0 *
+          ripple.magnitude;
+          */
+        float amplitude = 20.0 * ripple.magnitude;
+        float wavelength = radiansPerDistance * M_2_PI;
+
+        float rampUp =  min((ripple.radius - dist) / rippleAttack, 10.0);
+
+        transformed.xyz += vec3(
+          rampUp * dir.x * amplitude * cos(wavelength),
+          rampUp * dir.y * amplitude * cos(wavelength),
+          amplitude * sin(wavelength)
+        );
+      }
+    }
+  }
+  //transformed.z += wave(position.x, position.y, 0.01, 0.01, 1.0);
+  transformed.z += BasicWave(position, DirectionalWave(
+    vec2(1.0, 0.0),
+    10.0,
+    0.01,
+    0.001
+  )).z;
+  transformed.z += BasicWave(position, DirectionalWave(
+    normalize(vec2(-1.0, 1.0)),
+    8.0,
+    0.02,
+    0.0008
+  )).z;
+  transformed.z += BasicWave(position, DirectionalWave(
+    normalize(vec2(2.0, -8.0)),
+    12.0,
+    0.005,
+    0.0012
+  )).z;
+
+  /*
+  transformed += GerstnerWave(
+    //vec4(dir.x, dir.y, ripple.magnitude, ripple.speed),
+    vec4(1, 1, 0.4, 10),
+    position.xyz
+  );
+  */
+  //vColor.xyz += (rColor.xyz * 0.5);
+  //vColor.xyz *= color.xyz * ((transformed.z + 100.0) / 200.0);
+  vColor.xyz *= color2.xyz * ((transformed.z + 100.0) / 200.0);
+  //vColor.xyz *= color.xyz;
+      `,
+    },
+  });
+
+  /*
   material = new THREE.MeshStandardMaterial({
     //vertexColors: true,
     color: 0x00ff00,
   });
+*/
 
   plane = new THREE.Mesh(planeGeometry, material);
 
@@ -360,15 +553,13 @@ function initWebGl() {
   let light = new THREE.AmbientLight(0x404040); // soft white light
   scene.add(light);
 
-  let directionalLight = new THREE.DirectionalLight(0xffffff, 0.2);
+  let directionalLight = new THREE.DirectionalLight(0xffffff, 0.4);
   directionalLight.position.set(1, 1, 1).normalize();
   scene.add(directionalLight);
 
-  /*
-  let pointLight = new THREE.PointLight(0xffffff, 0.5, 0);
+  let pointLight = new THREE.PointLight(0xffffff, 0.8, 0);
   pointLight.position.set(50, 50, 600);
   scene.add(pointLight);
-  */
 
   scene.add(planeScene2);
 
@@ -489,14 +680,15 @@ function drawWebGl(time) {
 
   const {uniforms} = material;
 
-  /*
   uniforms.time.value = currentTime;
   uniforms.ripples.value = ripples;
   uniforms.rippleLength.value = rippleLength;
+  /*
   uniforms.emissive.value.set(
     1, 0, 1
   );
 */
+
   if (!window.asdf) {
     console.log('uniforms', uniforms);
     window.asdf = true;
